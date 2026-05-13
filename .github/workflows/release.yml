@@ -1,0 +1,76 @@
+# Push tag v*: OSV scan → assembleRelease APK → GitHub Release with APK artifact.
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  osv-scan:
+    name: OSV (pre-release)
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.3.8
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    with:
+      scan-args: |-
+        --recursive
+        ./
+
+  build-and-publish:
+    name: Build APK and publish GitHub Release
+    needs: osv-scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Assemble release APK
+        run: chmod +x ./gradlew && ./gradlew :app:assembleRelease --no-daemon --stacktrace
+
+      - name: Stage APK for upload
+        id: apk
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          APKS=(app/build/outputs/apk/release/*.apk)
+          if [[ ${#APKS[@]} -eq 0 ]]; then
+            echo "No APK under app/build/outputs/apk/release/"
+            exit 1
+          fi
+          SRC="${APKS[0]}"
+          DEST="tic-tac-toe-android-${{ github.ref_name }}.apk"
+          cp "$SRC" "$DEST"
+          echo "artifact=$DEST" >> "$GITHUB_OUTPUT"
+          ls -la "$DEST"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.apk.outputs.artifact }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
