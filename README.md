@@ -50,7 +50,11 @@ Start the main activity (if `adb` is on `PATH`):
 adb shell am start -n com.example.tic_tac_toe/.MainActivity
 ```
 
-Release builds: configure signing in Android Studio or `signingConfigs` before `./gradlew :app:assembleRelease`.
+Release builds: `./gradlew :app:assembleRelease`. The `release` build type is signed with the **debug keystore** so APKs (including GitHub Actions artifacts) are **sideloadable**; Google Play requires your own **upload keystore** in `signingConfigs` instead.
+
+## GitHub Releases
+
+Tagged pushes (`v*`) build a **signed** `assembleRelease` APK and attach it to the GitHub Release (debug keystore — suitable for sideloading, not for Play Console upload as-is).
 
 ## Localization
 

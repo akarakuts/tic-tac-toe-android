@@ -43,7 +43,11 @@ cd tic-tac-toe-android
 adb shell am start -n com.example.tic_tac_toe/.MainActivity
 ```
 
-Релиз: настройте подпись в Android Studio или через `signingConfigs`, затем `./gradlew :app:assembleRelease`.
+Релиз: `./gradlew :app:assembleRelease`. Сборка `release` подписывается **debug-ключом**, чтобы APK (в т.ч. из GitHub Actions) можно было **установить вручную**; для **Google Play** нужен свой upload keystore в `signingConfigs`.
+
+## Релизы на GitHub
+
+Пуш тега `v*` собирает подписанный `assembleRelease` APK и прикладывает его к GitHub Release (тот же debug-сертификат, что и у локальной `assembleRelease`; для загрузки в Play Console нужен свой keystore).
 
 ## Локализация
 

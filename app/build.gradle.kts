@@ -15,8 +15,8 @@ android {
         applicationId = "com.example.tic_tac_toe"
         minSdk = 24
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.0.2"
+        versionCode = 4
+        versionName = "1.0.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -28,6 +28,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Without signingConfig, assembleRelease produces an unsigned APK (INSTALL_PARSE_FAILED_NO_CERTIFICATES).
+            // Debug keystore makes CI/GitHub-release APKs sideloadable; Play Store needs a proper upload key.
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
