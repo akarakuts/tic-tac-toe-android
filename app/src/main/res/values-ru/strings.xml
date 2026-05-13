@@ -1,0 +1,62 @@
+<resources>
+    <string name="app_name">Крестики-нолики</string>
+
+    <string name="nav_play">Игра</string>
+    <string name="nav_settings">Настройки</string>
+    <string name="nav_scores">Очки</string>
+    <string name="menu_exit">Выход</string>
+    <string name="screen_play_title">Игра</string>
+    <string name="screen_settings_title">Настройки</string>
+    <string name="screen_settings_subtitle">Правила, соперник и оформление доски.</string>
+    <string name="screen_scores_title">Очки</string>
+    <string name="screen_scores_subtitle">Прогресс против компьютера.</string>
+    <string name="screen_scores_vs_ai_title">Против компьютера</string>
+    <string name="scores_label_wins">Победы</string>
+    <string name="scores_label_losses">Поражения</string>
+    <string name="scores_label_draws">Ничьи</string>
+    <string name="scores_record_hint">Счёт (поб-пор-нич): %1$d-%2$d-%3$d</string>
+
+    <string name="game_button_new_game">Новая игра</string>
+    <string name="game_mode_two_players">Два игрока</string>
+    <string name="game_mode_vs_computer">Против компьютера</string>
+    <string name="game_side_crosses">Вы — ✕</string>
+    <string name="game_side_noughts">Вы — ○</string>
+    <string name="game_draw">Ничья</string>
+
+    <string name="game_turn_crosses">Ход: крестики (✕)</string>
+    <string name="game_turn_noughts">Ход: нолики (○)</string>
+    <string name="game_turn_your_crosses">Ваш ход — ✕</string>
+    <string name="game_turn_your_noughts">Ваш ход — ○</string>
+    <string name="game_turn_computer_crosses">Ход компьютера (✕)</string>
+    <string name="game_turn_computer_noughts">Ход компьютера (○)</string>
+    <string name="game_turn_only_crosses">Ход: ✕</string>
+    <string name="game_turn_only_noughts">Ход: ○</string>
+
+    <string name="game_win_crosses">Победили крестики</string>
+    <string name="game_win_noughts">Победили нолики</string>
+    <string name="game_win_you">Вы победили</string>
+    <string name="game_win_computer">Победил компьютер</string>
+
+    <string name="game_settings_board">Размер поля</string>
+    <string name="game_settings_win_line">Подряд для победы</string>
+    <string name="game_settings_ai_difficulty">Сложность ИИ</string>
+    <string name="game_ai_easy">Легко</string>
+    <string name="game_ai_medium">Средне</string>
+    <string name="game_ai_hard">Сложно</string>
+
+    <string name="game_settings_theme">Тема доски</string>
+    <string name="game_theme_classic">Классика</string>
+    <string name="game_theme_aurora">Аврора</string>
+    <string name="game_theme_grove">Роща</string>
+    <string name="game_theme_ember">Закат</string>
+    <string name="game_theme_locked_badge">\u0020🔒</string>
+
+    <string name="game_stats_vs_ai">Против ИИ</string>
+    <string name="game_stats_streak">Серия</string>
+    <string name="game_stats_best">рек.</string>
+    <string name="game_sound_on">Звук вкл.</string>
+    <string name="game_sound_off">Звук выкл.</string>
+
+    <string name="game_theme_unlock_intro">Темы открываются в режиме «Против компьютера»:</string>
+    <string name="game_theme_unlock_details">Аврора — 1-я победа · Роща — 5 побед · Закат — серия 3</string>
+</resources>

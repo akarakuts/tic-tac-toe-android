@@ -1,0 +1,62 @@
+<resources>
+    <string name="app_name">Tic-tac-toe</string>
+
+    <string name="nav_play">Play</string>
+    <string name="nav_settings">Settings</string>
+    <string name="nav_scores">Scores</string>
+    <string name="menu_exit">Exit</string>
+    <string name="screen_play_title">Game</string>
+    <string name="screen_settings_title">Settings</string>
+    <string name="screen_settings_subtitle">Rules, opponent and board appearance.</string>
+    <string name="screen_scores_title">Scores</string>
+    <string name="screen_scores_subtitle">Your progress against the computer.</string>
+    <string name="screen_scores_vs_ai_title">Vs computer</string>
+    <string name="scores_label_wins">Wins</string>
+    <string name="scores_label_losses">Losses</string>
+    <string name="scores_label_draws">Draws</string>
+    <string name="scores_record_hint">Record (win-loss-draw): %1$d-%2$d-%3$d</string>
+
+    <string name="game_button_new_game">New Game</string>
+    <string name="game_mode_two_players">Two Players</string>
+    <string name="game_mode_vs_computer">vs Computer</string>
+    <string name="game_side_crosses">You — ✕</string>
+    <string name="game_side_noughts">You — ○</string>
+    <string name="game_draw">Draw</string>
+
+    <string name="game_turn_crosses">Turn: crosses (✕)</string>
+    <string name="game_turn_noughts">Turn: noughts (○)</string>
+    <string name="game_turn_your_crosses">Your turn — ✕</string>
+    <string name="game_turn_your_noughts">Your turn — ○</string>
+    <string name="game_turn_computer_crosses">Computer\'s turn (✕)</string>
+    <string name="game_turn_computer_noughts">Computer\'s turn (○)</string>
+    <string name="game_turn_only_crosses">Turn: ✕</string>
+    <string name="game_turn_only_noughts">Turn: ○</string>
+
+    <string name="game_win_crosses">Crosses win</string>
+    <string name="game_win_noughts">Noughts win</string>
+    <string name="game_win_you">You win</string>
+    <string name="game_win_computer">Computer wins</string>
+
+    <string name="game_settings_board">Board size</string>
+    <string name="game_settings_win_line">Symbols in a row to win</string>
+    <string name="game_settings_ai_difficulty">Computer strength</string>
+    <string name="game_ai_easy">Easy</string>
+    <string name="game_ai_medium">Medium</string>
+    <string name="game_ai_hard">Hard</string>
+
+    <string name="game_settings_theme">Board theme</string>
+    <string name="game_theme_classic">Classic</string>
+    <string name="game_theme_aurora">Aurora</string>
+    <string name="game_theme_grove">Grove</string>
+    <string name="game_theme_ember">Ember</string>
+    <string name="game_theme_locked_badge">\u0020🔒</string>
+
+    <string name="game_stats_vs_ai">vs AI</string>
+    <string name="game_stats_streak">Streak</string>
+    <string name="game_stats_best">best</string>
+    <string name="game_sound_on">Sound on</string>
+    <string name="game_sound_off">Sound off</string>
+
+    <string name="game_theme_unlock_intro">Unlock themes in vs Computer:</string>
+    <string name="game_theme_unlock_details">Aurora — 1st win · Grove — 5 wins · Ember — streak 3</string>
+</resources>
