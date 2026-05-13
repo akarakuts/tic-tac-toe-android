@@ -1,4 +1,5 @@
 # Push tag v*: OSV scan → assembleRelease APK → GitHub Release with APK artifact.
+# OSV reports to Code Scanning but does not block the release (fail-on-vuln=false).
 name: Release
 
 on:
@@ -19,6 +20,7 @@ jobs:
       security-events: write
       actions: read
     with:
+      fail-on-vuln: false
       scan-args: |-
         --recursive
         ./

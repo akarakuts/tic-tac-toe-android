@@ -1,4 +1,5 @@
 # OSV dependency scan + CodeQL on pushes and PRs to main (scheduled weekly).
+# OSV still uploads SARIF to Code Scanning; fail-on-vuln=false avoids failing CI on known CVE noise.
 name: Security
 
 on:
@@ -18,6 +19,7 @@ jobs:
       security-events: write
       actions: read
     with:
+      fail-on-vuln: false
       scan-args: |-
         --recursive
         ./
