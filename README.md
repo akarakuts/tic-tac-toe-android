@@ -34,6 +34,16 @@ Third-party libraries include **Navigation Compose**, **Lifecycle + ViewModel**,
 - **Android SDK** with API **36** compile SDK (project template); **minSdk 24**
 - **Android Studio** Ladybug+ or CLI **Gradle 8+/9+**
 
+## CI & automation
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| [CI](.github/workflows/ci.yml) | push / PR to `main`, manual | `:app:check` (unit tests, Lint, compile) |
+| [Security](.github/workflows/security.yml) | push / PR to `main`, weekly | OSV dependency scan, CodeQL |
+| [Release](.github/workflows/release.yml) | tag `v*` | Signed release APK + GitHub Release |
+
+[Dependabot](.github/dependabot.yml) opens weekly PRs for Gradle and GitHub Actions dependencies.
+
 ## Build & run
 
 Open the project root in Android Studio and run the **app** configuration, or from a terminal:

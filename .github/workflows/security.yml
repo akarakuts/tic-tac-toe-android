@@ -4,6 +4,9 @@
 # OSV still uploads SARIF to Code Scanning; fail-on-vuln=false avoids failing CI on known CVE noise.
 name: Security
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main]

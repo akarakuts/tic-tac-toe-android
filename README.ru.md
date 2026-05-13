@@ -34,6 +34,16 @@
 - **Android SDK**, **minSdk 24**, целевой/compile SDK — как в модуле `app`
 - **Android Studio** или Gradle в терминале
 
+## CI и автоматизация
+
+| Workflow | Когда | Задача |
+|----------|--------|--------|
+| [CI](.github/workflows/ci.yml) | push / PR в `main`, вручную | `:app:check` (юнит-тесты, Lint, сборка) |
+| [Security](.github/workflows/security.yml) | push / PR в `main`, раз в неделю | OSV, CodeQL |
+| [Release](.github/workflows/release.yml) | тег `v*` | APK релиза + GitHub Release |
+
+[Dependabot](.github/dependabot.yml) — еженедельные PR с обновлениями Gradle и GitHub Actions.
+
 ## Сборка и запуск
 
 ```bash
