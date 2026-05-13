@@ -40,9 +40,51 @@ Third-party libraries include **Navigation Compose**, **Lifecycle + ViewModel**,
 |----------|---------|---------|
 | [CI](.github/workflows/ci.yml) | push / PR to `main`, manual | `:app:check` (unit tests, Lint, compile) |
 | [Security](.github/workflows/security.yml) | push / PR to `main`, weekly | OSV dependency scan, CodeQL |
-| [Release](.github/workflows/release.yml) | tag `v*` | Signed release APK + GitHub Release |
+| [Release](.github/workflows/release.yml) | tag `v*` | Upload-keystore–signed **APK + AAB** + GitHub Release (requires secrets) |
 
 [Dependabot](.github/dependabot.yml) opens weekly PRs for Gradle and GitHub Actions dependencies.
+
+## Release signing (RuStore / GitHub Actions)
+
+RuStore and similar stores expect a **release build signed with your upload key** (AAB is typical for publication). Official RuStore steps (certificate / AAB upload) are in their help centre, e.g. [upload AAB / signing](https://www.rustore.ru/help/developers/publishing-and-verifying-apps/app-publication/new-version-app/upload-aab).
+
+### 1. Create an upload keystore (once)
+
+```bash
+keytool -genkeypair -v \
+  -keystore upload-keystore.jks \
+  -alias upload \
+  -keyalg RSA -keysize 2048 -validity 10000
+```
+
+Keep **`upload-keystore.jks`** and passwords in a password manager; **back up** the file — without it you cannot ship compatible updates.
+
+### 2. Local signed `release` builds
+
+1. Copy [`keystore.properties.example`](keystore.properties.example) to **`keystore.properties`** in the **repository root** (this file is gitignored).
+2. Set `storeFile`, passwords, and `keyAlias` to match your keystore.
+3. Run:
+
+```bash
+./gradlew :app:assembleRelease :app:bundleRelease
+```
+
+Outputs: `app/build/outputs/apk/release/*.apk` and `app/build/outputs/bundle/release/*.aab`.
+
+If **`keystore.properties` is missing**, `release` still signs with the **debug** keystore so the project builds on fresh clones — **do not** upload that build to RuStore.
+
+### 3. GitHub Actions tag releases (`v*`)
+
+Configure these **repository secrets** (Settings → Secrets and variables → Actions):
+
+| Secret | Value |
+|--------|--------|
+| `RELEASE_KEYSTORE_BASE64` | Base64 of `upload-keystore.jks` (e.g. `base64 -i upload-keystore.jks \| tr -d '\n'` on macOS) |
+| `RELEASE_STORE_PASSWORD` | Keystore password |
+| `RELEASE_KEY_ALIAS` | Key alias (e.g. `upload`) |
+| `RELEASE_KEY_PASSWORD` | Key password |
+
+The [Release](.github/workflows/release.yml) workflow writes `keystore.properties` and `upload-keystore.jks` on the runner, then runs **`assembleRelease`** and **`bundleRelease`**, and attaches **`.apk`** and **`.aab`** to the GitHub Release. If any secret is missing, the workflow **fails** with an error message (no silent debug-signed store builds).
 
 ## Build & run
 
@@ -60,11 +102,11 @@ Start the main activity (if `adb` is on `PATH`):
 adb shell am start -n com.example.tic_tac_toe/.MainActivity
 ```
 
-Release builds: `./gradlew :app:assembleRelease`. The `release` build type is signed with the **debug keystore** so APKs (including GitHub Actions artifacts) are **sideloadable**; Google Play requires your own **upload keystore** in `signingConfigs` instead.
+Debug install: `./gradlew :app:installDebug`. For **store-ready** signed builds, see [Release signing (RuStore / GitHub Actions)](#release-signing-rustore--github-actions).
 
 ## GitHub Releases
 
-Tagged pushes (`v*`) build a **signed** `assembleRelease` APK and attach it to the GitHub Release (debug keystore — suitable for sideloading, not for Play Console upload as-is).
+Tagged pushes (`v*`) run the Release workflow: **APK + AAB** signed with your **upload keystore** from GitHub secrets. Without secrets the workflow fails on purpose (see table above).
 
 ## Localization
 

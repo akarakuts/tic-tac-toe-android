@@ -1,7 +1,12 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
 }
+
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val hasUploadKeystore: Boolean = keystorePropertiesFile.exists()
 
 android {
     namespace = "com.example.tic_tac_toe"
@@ -21,6 +26,23 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        if (hasUploadKeystore) {
+            create("upload") {
+                val p = Properties().apply { load(keystorePropertiesFile.reader()) }
+                val storeRelative = p.getProperty("storeFile")
+                    ?: error("keystore.properties: missing storeFile")
+                storeFile = rootProject.file(storeRelative)
+                storePassword = p.getProperty("storePassword")
+                    ?: error("keystore.properties: missing storePassword")
+                keyAlias = p.getProperty("keyAlias")
+                    ?: error("keystore.properties: missing keyAlias")
+                keyPassword = p.getProperty("keyPassword")
+                    ?: error("keystore.properties: missing keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -28,9 +50,13 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // Without signingConfig, assembleRelease produces an unsigned APK (INSTALL_PARSE_FAILED_NO_CERTIFICATES).
-            // Debug keystore makes CI/GitHub-release APKs sideloadable; Play Store needs a proper upload key.
-            signingConfig = signingConfigs.getByName("debug")
+            // Upload keystore (keystore.properties) → store-ready signing (RuStore, etc.).
+            // Without it, release uses the debug keystore so local/unsigned-debug CI APKs still install.
+            signingConfig = if (hasUploadKeystore) {
+                signingConfigs.getByName("upload")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
     compileOptions {

@@ -14,3 +14,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Release upload keystore (never commit secrets or binary keystore)
+keystore.properties
+upload-keystore.jks
+*.jks
+*.keystore
