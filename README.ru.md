@@ -92,7 +92,7 @@ Workflow [Release](.github/workflows/release.yml) создаёт на ранне
 cd tic-tac-toe-android
 ./gradlew :app:assembleDebug
 ./gradlew :app:installDebug   # нужны эмулятор или устройство
-adb shell am start -n ru.bars.tictactoe/.MainActivity
+adb shell am start -n ru.akarakuts.tictactoe/.MainActivity
 ```
 
 Отладочная установка: `./gradlew :app:installDebug`. Для **магазинной** подписи см. [Подпись релиза (RuStore / GitHub Actions)](#подпись-релиза-rustore--github-actions).

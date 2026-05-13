@@ -99,7 +99,7 @@ cd tic-tac-toe-android
 Start the main activity (if `adb` is on `PATH`):
 
 ```bash
-adb shell am start -n ru.bars.tictactoe/.MainActivity
+adb shell am start -n ru.akarakuts.tictactoe/.MainActivity
 ```
 
 Debug install: `./gradlew :app:installDebug`. For **store-ready** signed builds, see [Release signing (RuStore / GitHub Actions)](#release-signing-rustore--github-actions).
