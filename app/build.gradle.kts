@@ -9,7 +9,7 @@ val keystorePropertiesFile = rootProject.file("keystore.properties")
 val hasUploadKeystore: Boolean = keystorePropertiesFile.exists()
 
 android {
-    namespace = "com.example.tic_tac_toe"
+    namespace = "ru.bars.tictactoe"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -17,11 +17,11 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.tic_tac_toe"
+        applicationId = "ru.bars.tictactoe"
         minSdk = 24
         targetSdk = 36
-        versionCode = 6
-        versionName = "1.0.6"
+        versionCode = 7
+        versionName = "1.0.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
