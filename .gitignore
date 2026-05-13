@@ -1,19 +1,25 @@
+# --- Android / Gradle ---
 *.iml
-.kotlin/
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+**/*.iml
+.gradle/
+**/build/
+/build/
+/captures/
+.externalNativeBuild/
+.cxx/
 local.properties
+.kotlin/
+
+# IDE (Android Studio / IntelliJ): entire .idea/ is machine-local, not versioned
+.idea/
+
+# OS ---
+.DS_Store
+Thumbs.db
+
+# Logs / heap dumps at repo root
+*.log
+*.hprof
 
 # Release upload keystore (never commit secrets or binary keystore)
 keystore.properties
