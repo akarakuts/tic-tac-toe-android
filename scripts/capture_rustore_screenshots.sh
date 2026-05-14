@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-# Скриншоты для RuStore: портрет 1280×2856; дубликаты уменьшены: ./store_max1920/*_max1920.png (длинная сторона ≤1920).
+# Скриншоты для RuStore: сначала полный кадр эмулятора, затем без status bar; для витрины — строго 9:16 (портрет).
+# RuStore режет кадры не 9:16; допустимые примеры: 720×1280, 1080×1920, 1440×2560.
+# https://help.rustore.ru/rustore/for_developers/publishing_and_verifying_apps/requirement_apps
+# Готовые к загрузке файлы: ./store_${RUSTORE_W}x${RUSTORE_H}/ (по умолчанию ./store_1080x1920/).
+# Другой размер 9:16: RUSTORE_W=1440 RUSTORE_H=2560 ./scripts/capture_rustore_screenshots.sh
 # После съёма обрезается системная строка состояния (время, сеть, батарея). Высота по умолчанию — 156 px (Pixel 9 Pro / API 36);
 # при другом устройстве: STRIP_STATUS_TOP_PX=… ./scripts/capture_rustore_screenshots.sh
 set -euo pipefail
@@ -11,8 +15,14 @@ PROJ_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 OUT="${PROJ_ROOT}/docs/store-screenshots"
 # Пиксели, отрезаемые сверху (status bar). Для 1280×2856 на эмуляторе Pixel 9 Pro совпадает с началом TopAppBar (y=156).
 STRIP_STATUS_TOP_PX="${STRIP_STATUS_TOP_PX:-156}"
+# Целевой кадр для консоли RuStore (ширина×высота, соотношение 9:16).
+RUSTORE_W="${RUSTORE_W:-1080}"
+RUSTORE_H="${RUSTORE_H:-1920}"
+# Вертикальное выравнивание при crop до 9:16: bottom — низ экрана (навигация) не обрезается; top|center|bottom.
+RUSTORE_CROP_VERTICAL="${RUSTORE_CROP_VERTICAL:-bottom}"
+RUSTORE_OUT="${OUT}/store_${RUSTORE_W}x${RUSTORE_H}"
 
-mkdir -p "$OUT/store_max1920"
+mkdir -p "$OUT" "$RUSTORE_OUT"
 
 dump_ui() {
   adb shell uiautomator dump /sdcard/uid.xml >/dev/null 2>&1
@@ -51,6 +61,30 @@ strip_status_bar() {
   fi
   ffmpeg -y -nostdin -hide_banner -loglevel error -i "$f" -vf "crop=${w}:${nh}:0:${top}" -frames:v 1 "$tmp"
   mv "$tmp" "$f"
+}
+
+# Портрет 9:16 для витрины: масштаб с сохранением пропорций до покрытия кадра, crop без полей.
+# По умолчанию crop прижат к низу (RUSTORE_CROP_VERTICAL=bottom), чтобы не резать нижнюю навигацию.
+rustore_portrait_9x16() {
+  local src="$1" dst="$2"
+  local w="${RUSTORE_W}" h="${RUSTORE_H}"
+  local cy_expr
+  case "${RUSTORE_CROP_VERTICAL}" in
+    top) cy_expr="0" ;;
+    center) cy_expr="(ih-${h})/2" ;;
+    bottom) cy_expr="ih-${h}" ;;
+    *)
+      echo "capture_rustore_screenshots: неизвестный RUSTORE_CROP_VERTICAL=${RUSTORE_CROP_VERTICAL}, допустимо top|center|bottom" >&2
+      return 1
+      ;;
+  esac
+  if ! command -v ffmpeg >/dev/null 2>&1; then
+    echo "capture_rustore_screenshots: ffmpeg не найден — пропуск 9:16: $src" >&2
+    return 1
+  fi
+  ffmpeg -y -nostdin -hide_banner -loglevel error -i "$src" \
+    -vf "scale=${w}:${h}:force_original_aspect_ratio=increase,crop=${w}:${h}:(iw-${w})/2:${cy_expr}" \
+    -frames:v 1 "$dst"
 }
 
 scroll_settings_abs_top() {
@@ -124,12 +158,14 @@ for f in "$OUT"/0*.png; do
   strip_status_bar "$f"
 done
 
-rm -f "$OUT/store_max1920"/*.png
+rm -f "$RUSTORE_OUT"/*.png
 for f in "$OUT"/0*.png; do
   [[ -f "$f" ]] || continue
   base=$(basename "$f" .png)
-  sips -Z 1920 "$f" --out "$OUT/store_max1920/${base}_max1920.png" >/dev/null
+  rustore_portrait_9x16 "$f" "$RUSTORE_OUT/${base}.png"
 done
 
 echo "Готово: $OUT"
-ls -la "$OUT"/*.png "$OUT/store_max1920"/*.png
+echo "RuStore (9:16, ${RUSTORE_W}×${RUSTORE_H}): $RUSTORE_OUT"
+ls -la "$RUSTORE_OUT"/*.png
+ls -la "$OUT"/*.png
