@@ -86,6 +86,14 @@ Configure these **repository secrets** (Settings → Secrets and variables → A
 
 The [Release](.github/workflows/release.yml) workflow writes `keystore.properties` and `upload-keystore.jks` on the runner, then runs **`assembleRelease`** and **`bundleRelease`**, and attaches **`.apk`** and **`.aab`** to the GitHub Release. If any secret is missing, the workflow **fails** with an error message (no silent debug-signed store builds).
 
+### RuStore listing icon (moderation)
+
+RuStore may reject the app if the **store card icon** does not match the **launcher icon inside the APK**. Use the canonical image committed in this repo as the store graphic:
+
+- **[`docs/rustore/ic_launcher_store_512.png`](docs/rustore/ic_launcher_store_512.png)** — same layout as `mipmap-*` / adaptive-icon drawables (`ic_launcher_background` + `ic_launcher_foreground`). Regenerate after editing vectors: `.venv-icon/bin/python scripts/generate_launcher_icons.py` (see [`scripts/generate_launcher_icons.py`](scripts/generate_launcher_icons.py)).
+
+Russian checklist: [`docs/rustore/README.ru.md`](docs/rustore/README.ru.md). General RuStore rules: [application requirements](https://help.rustore.ru/rustore/for_developers/publishing_and_verifying_apps/requirement_apps).
+
 ## Build & run
 
 Open the project root in Android Studio and run the **app** configuration, or from a terminal:

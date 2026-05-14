@@ -10,6 +10,9 @@
 local.properties
 .kotlin/
 
+# Local venv for scripts/generate_launcher_icons.py (optional)
+.venv-icon/
+
 # IDE (Android Studio / IntelliJ): entire .idea/ is machine-local, not versioned
 .idea/
 

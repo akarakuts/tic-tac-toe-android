@@ -86,6 +86,10 @@ keytool -genkeypair -v \
 
 Workflow [Release](.github/workflows/release.yml) создаёт на раннере `keystore.properties` и `upload-keystore.jks`, собирает **`assembleRelease`** и **`bundleRelease`**, прикладывает к GitHub Release **`.apk`** и **`.aab`**. Если секрет не задан — workflow **завершится с ошибкой** (без «тихой» debug-подписи для магазина).
 
+### Иконка на витрине RuStore (модерация)
+
+Если иконка в консоли RuStore **не совпадает** с иконкой установленного приложения, модерация отклоняет заявку. Используйте эталон из репозитория: **[`docs/rustore/ic_launcher_store_512.png`](docs/rustore/ic_launcher_store_512.png)** — тот же макет, что в APK (см. [`docs/rustore/README.ru.md`](docs/rustore/README.ru.md)). Общие требования RuStore: [требования к приложениям](https://help.rustore.ru/rustore/for_developers/publishing_and_verifying_apps/requirement_apps).
+
 ## Сборка и запуск
 
 ```bash
