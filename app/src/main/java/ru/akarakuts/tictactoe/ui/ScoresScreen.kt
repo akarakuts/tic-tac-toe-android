@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -121,6 +123,7 @@ fun ScoresScreen(vm: GameViewModel, palette: BoardPalette) {
             }
 
             ThemeLegendCard(palette = palette, modifier = Modifier.padding(bottom = 24.dp))
+            Spacer(modifier = Modifier.height(140.dp))
         }
     }
 }

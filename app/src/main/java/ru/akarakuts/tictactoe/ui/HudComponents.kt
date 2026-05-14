@@ -40,14 +40,16 @@ fun ThemeLegendCard(palette: BoardPalette, modifier: Modifier = Modifier) {
             palette.panelStroke.copy(alpha = palette.panelStroke.alpha * 0.95f),
         ),
     ) {
-        Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
+        Column(Modifier.padding(horizontal = 18.dp, vertical = 10.dp)) {
             Text(
                 text = stringResource(R.string.game_theme_unlock_intro),
                 color = palette.captionText,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp),
             )
             Text(
                 text = stringResource(R.string.game_theme_unlock_details),
@@ -56,7 +58,7 @@ fun ThemeLegendCard(palette: BoardPalette, modifier: Modifier = Modifier) {
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 4.dp),
+                    .padding(top = 4.dp, start = 4.dp, end = 4.dp),
             )
         }
     }

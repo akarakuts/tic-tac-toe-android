@@ -43,7 +43,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     var game by mutableStateOf(GameModel.new(boardSize, winLength))
         private set
 
-    var opponentMode by mutableStateOf(OpponentMode.HumanHuman)
+    var opponentMode by mutableStateOf(OpponentMode.HumanComputer)
         private set
 
     var humanPlayer by mutableStateOf(Player.X)
