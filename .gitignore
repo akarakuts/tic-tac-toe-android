@@ -29,3 +29,4 @@ keystore.properties
 upload-keystore.jks
 *.jks
 *.keystore
+/docs/
