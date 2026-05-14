@@ -20,8 +20,8 @@ android {
         applicationId = "ru.akarakuts.tictactoe"
         minSdk = 24
         targetSdk = 36
-        versionCode = 9
-        versionName = "1.0.9"
+        versionCode = 10
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
