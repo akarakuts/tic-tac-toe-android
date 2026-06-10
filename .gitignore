@@ -15,6 +15,7 @@ local.properties
 
 # IDE (Android Studio / IntelliJ): entire .idea/ is machine-local, not versioned
 .idea/
+.cursor/
 
 # OS ---
 .DS_Store

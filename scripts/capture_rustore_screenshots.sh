@@ -169,3 +169,11 @@ echo "Готово: $OUT"
 echo "RuStore (9:16, ${RUSTORE_W}×${RUSTORE_H}): $RUSTORE_OUT"
 ls -la "$RUSTORE_OUT"/*.png
 ls -la "$OUT"/*.png
+
+# В консоль RuStore — только store_1080x1920 (9:16), не сырые 0*.png и не Screenshot_*.png
+RUSTORE_COPY_TO="${RUSTORE_COPY_TO:-}"
+if [[ -n "$RUSTORE_COPY_TO" ]]; then
+  mkdir -p "$RUSTORE_COPY_TO"
+  cp -f "$RUSTORE_OUT"/*.png "$RUSTORE_COPY_TO/"
+  echo "Скопировано (9:16): $RUSTORE_COPY_TO"
+fi

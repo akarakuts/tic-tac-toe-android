@@ -114,8 +114,7 @@ object TicTacToeAI {
         val n = state.boardSize
         val w = state.winLength
         val idx = row * n + col
-        val lines = GameModel.makeWinLines(n, w)
-        lineLoop@ for (line in lines) {
+        lineLoop@ for (line in state.winLines) {
             if (idx !in line) continue
             var pCount = 0
             var emptyCount = 0
@@ -140,10 +139,9 @@ object TicTacToeAI {
 
     private fun evaluateStatic(state: GameModel, aiPlayer: Player): Int {
         val opp = aiPlayer.other
-        val lines = GameModel.makeWinLines(state.boardSize, state.winLength)
         var score = 0
         val n = state.boardSize
-        for (line in lines) {
+        for (line in state.winLines) {
             var aiCount = 0
             var oppCount = 0
             var emptyCount = 0

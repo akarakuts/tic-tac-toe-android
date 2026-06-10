@@ -15,7 +15,9 @@ Android port of the **tic-tac-toe** game (n-in-a-row on a square grid), aligned 
 - **Unlocks** (vs AI only): Aurora — 1st win; Grove — 5 wins; Ember — best streak ≥ 3.
 - **Statistics** vs AI (wins / losses / draws, streak, best streak) — see **Scores** tab.
 - **Sound** — short synthesized tones (move / win / invalid); toggle persisted.
-- **UI** — **three destinations**: **Play** (board + status + New game), **Settings** (rules & appearance), **Scores** (stats + theme legend). Bottom navigation + **Exit** in the top bar (`Activity.finish()`). Layout uses **`BoxWithConstraints`** where needed so the board scales on phones and tablets.
+- **Match settings** (board size, win line, opponent mode, side) — persisted between launches.
+- **UI** — **four tabs**: **Play**, **Settings**, **Scores**, **About** (version, support, [privacy policy](docs/privacy.md)). Bottom navigation; adaptive board via **`BoxWithConstraints`** (two-column layout on wide screens).
+- **Accessibility** — TalkBack labels for navigation and board cells.
 
 ## Android-specific notes
 
@@ -26,11 +28,11 @@ Android port of the **tic-tac-toe** game (n-in-a-row on a square grid), aligned 
 | `Localizable.xcstrings` | `res/values/strings.xml`, `res/values-ru/strings.xml` |
 | Single window HUD | `NavHost` + `Scaffold` + bottom bar |
 
-Third-party libraries include **Navigation Compose**, **Lifecycle + ViewModel**, **Coroutines**, and **Material Icons Extended** (see `app/build.gradle.kts`).
+Third-party libraries include **Navigation Compose**, **Lifecycle + ViewModel**, and **Coroutines** (see `app/build.gradle.kts`). Unit tests cover game rules, AI, and progress JSON.
 
 ## Requirements
 
-- **JDK 11+** (as in `app/build.gradle.kts`)
+- **JDK 17+** (as in `app/build.gradle.kts`)
 - **Android SDK** with API **36** compile SDK (project template); **minSdk 24**
 - **Android Studio** Ladybug+ or CLI **Gradle 8+/9+**
 

@@ -4,7 +4,7 @@
     <string name="nav_play">Игра</string>
     <string name="nav_settings">Настройки</string>
     <string name="nav_scores">Очки</string>
-    <string name="menu_exit">Выход</string>
+    <string name="nav_about">О приложении</string>
     <string name="screen_play_title">Игра</string>
     <string name="screen_settings_title">Настройки</string>
     <string name="screen_settings_subtitle">Правила, соперник и оформление доски.</string>
@@ -59,4 +59,20 @@
 
     <string name="game_theme_unlock_intro">Темы открываются в режиме «Против компьютера»:</string>
     <string name="game_theme_unlock_details">Аврора — 1-я победа · Роща — 5 побед · Закат — серия 3</string>
+
+    <string name="screen_about_title">О приложении</string>
+    <string name="screen_about_subtitle">Описание, поддержка и конфиденциальность.</string>
+    <string name="about_version">Версия %1$s (%2$d)</string>
+    <string name="about_description">Крестики-нолики с настраиваемым полем и длиной линии. Игра вдвоём или против компьютера. Статистика и темы открываются в режиме «Против компьютера».</string>
+    <string name="about_license">Лицензия GNU GPL v3 или новее. Copyright (C) Aleksey Karakuts.</string>
+    <string name="about_contact">Написать в поддержку</string>
+    <string name="about_privacy">Политика конфиденциальности</string>
+    <string name="about_privacy_url">https://github.com/akarakuts/tic-tac-toe-android/blob/main/docs/privacy.ru.md</string>
+
+    <string name="game_ai_thinking">Компьютер думает…</string>
+
+    <string name="a11y_cell_empty">пусто</string>
+    <string name="a11y_cell_cross">крестик</string>
+    <string name="a11y_cell_nought">нолик</string>
+    <string name="a11y_cell_position">Ряд %1$d, столбец %2$d, %3$s</string>
 </resources>

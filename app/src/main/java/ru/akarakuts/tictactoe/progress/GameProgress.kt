@@ -2,8 +2,10 @@ package ru.akarakuts.tictactoe.progress
 
 import ru.akarakuts.tictactoe.game.AIDifficulty
 import ru.akarakuts.tictactoe.game.BoardVisualStyle
+import ru.akarakuts.tictactoe.game.OpponentMode
+import ru.akarakuts.tictactoe.game.Player
 
-/** Persisted vs-AI stats, streaks, theme unlocks, difficulty, and sound toggle (macOS parity). */
+/** Persisted vs-AI stats, match settings, streaks, theme unlocks, difficulty, and sound toggle. */
 data class GameProgress(
     val winsVsAI: Int = 0,
     val lossesVsAI: Int = 0,
@@ -14,6 +16,10 @@ data class GameProgress(
     val selectedTheme: BoardVisualStyle = BoardVisualStyle.Classic,
     val aiDifficulty: AIDifficulty = AIDifficulty.Medium,
     val soundEnabled: Boolean = true,
+    val boardSize: Int = 3,
+    val winLength: Int = 3,
+    val opponentMode: OpponentMode = OpponentMode.HumanComputer,
+    val humanPlayer: Player = Player.X,
 ) {
     fun applyVsAIOutcome(humanWon: Boolean?): GameProgress {
         var wins = winsVsAI

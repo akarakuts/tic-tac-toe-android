@@ -38,9 +38,9 @@ def draw_icon(size: int) -> Image.Image:
 
     pad = sc(18.0)
     inner = sc(72.0)
-    r_corner = s * 0.22
-    xy = (0, 0, s - 1, s - 1)
-    draw.rounded_rectangle(xy, radius=r_corner, fill=BG)
+    # Квадратный фон как ic_launcher_background.xml (без скругления всего холста — иначе
+    # иконка витрины RuStore не совпадает с adaptive-icon на устройстве).
+    draw.rectangle((0, 0, s - 1, s - 1), fill=BG)
 
     # Inner grid area (18..90 in 108 space)
     x0, y0 = pad, pad

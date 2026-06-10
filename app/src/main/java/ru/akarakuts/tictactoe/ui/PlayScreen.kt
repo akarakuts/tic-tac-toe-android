@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +16,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -27,6 +30,7 @@ import ru.akarakuts.tictactoe.theme.BoardPalette
 /** Game tab: adaptive layout, status line, [GameBoard], New game. */
 @Composable
 fun PlayScreen(vm: GameViewModel, palette: BoardPalette) {
+    val haptic = LocalHapticFeedback.current
     val status = vm.statusText(
         turnCrosses = stringResource(R.string.game_turn_crosses),
         turnNoughts = stringResource(R.string.game_turn_noughts),
@@ -41,6 +45,7 @@ fun PlayScreen(vm: GameViewModel, palette: BoardPalette) {
         winNoughts = stringResource(R.string.game_win_noughts),
         winYou = stringResource(R.string.game_win_you),
         winComputer = stringResource(R.string.game_win_computer),
+        aiThinking = stringResource(R.string.game_ai_thinking),
     )
 
     BoxWithConstraints(
@@ -49,17 +54,13 @@ fun PlayScreen(vm: GameViewModel, palette: BoardPalette) {
             .background(palette.sceneBackground)
             .padding(horizontal = 16.dp, vertical = 8.dp),
     ) {
-        val reserveForChrome = 200.dp
-        val boardSide = (maxWidth - 16.dp).coerceAtMost(maxHeight - reserveForChrome).coerceAtLeast(160.dp)
+        val isWide = maxWidth >= 600.dp
+        val reserveForChrome = if (isWide) 120.dp else 200.dp
+        val boardSide = (if (isWide) maxWidth * 0.48f else maxWidth - 16.dp)
+            .coerceAtMost(maxHeight - reserveForChrome)
+            .coerceAtLeast(160.dp)
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .widthIn(max = 720.dp)
-                .align(Alignment.Center),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
+        val statusBlock = @Composable {
             Text(
                 text = status,
                 color = palette.statusText,
@@ -70,6 +71,23 @@ fun PlayScreen(vm: GameViewModel, palette: BoardPalette) {
                     .fillMaxWidth()
                     .padding(bottom = 8.dp),
             )
+        }
+
+        val boardBlock = @Composable {
+            GameBoard(
+                game = vm.game,
+                palette = palette,
+                humanBlocked = vm.opponentMode == OpponentMode.HumanComputer &&
+                    vm.game.currentPlayer != vm.humanPlayer,
+                onCell = { r, c ->
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    vm.cellTap(r, c)
+                },
+                modifier = Modifier.size(boardSide),
+            )
+        }
+
+        val newGameBlock = @Composable {
             HudPrimaryButton(
                 text = stringResource(R.string.game_button_new_game),
                 palette = palette,
@@ -78,15 +96,49 @@ fun PlayScreen(vm: GameViewModel, palette: BoardPalette) {
                     .fillMaxWidth()
                     .widthIn(max = 420.dp),
             )
-            Spacer(modifier = Modifier.height(16.dp))
-            GameBoard(
-                game = vm.game,
-                palette = palette,
-                humanBlocked = vm.opponentMode == OpponentMode.HumanComputer &&
-                    vm.game.currentPlayer != vm.humanPlayer,
-                onCell = { r, c -> vm.cellTap(r, c) },
-                modifier = Modifier.size(boardSide),
-            )
+        }
+
+        if (isWide) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .widthIn(max = 960.dp)
+                    .align(Alignment.Center),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    statusBlock()
+                    boardBlock()
+                }
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .weight(0.55f)
+                        .padding(start = 16.dp),
+                ) {
+                    newGameBlock()
+                }
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .widthIn(max = 720.dp)
+                    .align(Alignment.Center),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                statusBlock()
+                boardBlock()
+                Spacer(modifier = Modifier.height(16.dp))
+                newGameBlock()
+            }
         }
     }
 }

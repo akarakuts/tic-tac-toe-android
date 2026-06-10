@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import kotlin.math.PI
 import kotlin.math.sin
@@ -18,6 +19,7 @@ object GameSoundFx {
     var soundEffectsEnabled: Boolean = true
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private val playMutex = Mutex()
 
     private val sampleRate = 44_100
 
@@ -34,23 +36,38 @@ object GameSoundFx {
 
     fun playWinFanfare() {
         scope.launch {
-            playToneSuspend(523.25, 0.09, 0.16f)
-            delay(90)
-            playToneSuspend(659.25, 0.10, 0.17f)
-            delay(100)
-            playToneSuspend(783.99, 0.14, 0.18f)
+            playMutex.lock()
+            try {
+                playToneSuspend(523.25, 0.09, 0.16f)
+                delay(90)
+                playToneSuspend(659.25, 0.10, 0.17f)
+                delay(100)
+                playToneSuspend(783.99, 0.14, 0.18f)
+            } finally {
+                playMutex.unlock()
+            }
         }
     }
 
     fun playInvalidMove() {
         scope.launch(Dispatchers.IO) {
-            playToneSuspend(165.0, 0.11, 0.22f)
+            playMutex.lock()
+            try {
+                playToneSuspend(165.0, 0.11, 0.22f)
+            } finally {
+                playMutex.unlock()
+            }
         }
     }
 
     fun playMoveTap() {
         scope.launch(Dispatchers.IO) {
-            playToneSuspend(920.0, 0.038, 0.14f)
+            playMutex.lock()
+            try {
+                playToneSuspend(920.0, 0.038, 0.14f)
+            } finally {
+                playMutex.unlock()
+            }
         }
     }
 
@@ -60,7 +77,7 @@ object GameSoundFx {
         }
     }
 
-    private fun playToneBlocking(frequency: Double, durationSec: Double, volume: Float) {
+    private suspend fun playToneBlocking(frequency: Double, durationSec: Double, volume: Float) {
         if (!soundEffectsEnabled) return
         if (durationSec <= 0) return
         val frameCount = (sampleRate * durationSec).toInt().coerceAtLeast(1)
@@ -91,7 +108,7 @@ object GameSoundFx {
         try {
             track.write(samples, 0, samples.size)
             track.play()
-            Thread.sleep((durationSec * 1000).toLong().coerceAtLeast(1) + 80)
+            delay((durationSec * 1000).toLong().coerceAtLeast(1) + 40)
         } catch (_: Exception) {
             // ignore
         } finally {

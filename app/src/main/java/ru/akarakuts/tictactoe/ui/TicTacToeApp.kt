@@ -1,13 +1,8 @@
 package ru.akarakuts.tictactoe.ui
 
-import androidx.activity.ComponentActivity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.SportsEsports
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -16,13 +11,12 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
@@ -32,11 +26,12 @@ import androidx.navigation.compose.rememberNavController
 import ru.akarakuts.tictactoe.R
 import ru.akarakuts.tictactoe.theme.boardPalette
 
-/** Bottom-nav routes for Play / Settings / Scores. */
+/** Bottom-nav routes for Play / Settings / Scores / About. */
 object NavRoutes {
     const val PLAY = "play"
     const val SETTINGS = "settings"
     const val SCORES = "scores"
+    const val ABOUT = "about"
 }
 
 private fun NavController.navigateTab(route: String) {
@@ -50,7 +45,7 @@ private fun NavController.navigateTab(route: String) {
 }
 
 /**
- * Root scaffold: [TopAppBar] with exit ([ComponentActivity.finish]), [NavigationBar], [NavHost] for tab screens.
+ * Root scaffold: [TopAppBar], [NavigationBar], [NavHost] for tab screens.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,7 +58,6 @@ fun TicTacToeApp(vm: GameViewModel) {
     val accent = MaterialTheme.colorScheme.primary
     val palette = boardPalette(vm.progress.selectedTheme, dark, accent)
 
-    val activity = LocalContext.current as ComponentActivity
     val panelBg = palette.panelFill.copy(alpha = (palette.panelFill.alpha * 1.08f).coerceIn(0f, 1f))
 
     Scaffold(
@@ -74,7 +68,6 @@ fun TicTacToeApp(vm: GameViewModel) {
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = panelBg,
                     titleContentColor = palette.statusText,
-                    actionIconContentColor = palette.statusText,
                 ),
                 title = {
                     Text(
@@ -82,15 +75,11 @@ fun TicTacToeApp(vm: GameViewModel) {
                             NavRoutes.PLAY -> stringResource(R.string.screen_play_title)
                             NavRoutes.SETTINGS -> stringResource(R.string.screen_settings_title)
                             NavRoutes.SCORES -> stringResource(R.string.screen_scores_title)
+                            NavRoutes.ABOUT -> stringResource(R.string.screen_about_title)
                             else -> stringResource(R.string.app_name)
                         },
                         color = palette.statusText,
                     )
-                },
-                actions = {
-                    TextButton(onClick = { activity.finish() }) {
-                        Text(stringResource(R.string.menu_exit), color = palette.statusText)
-                    }
                 },
             )
         },
@@ -102,41 +91,50 @@ fun TicTacToeApp(vm: GameViewModel) {
                 NavigationBarItem(
                     selected = currentRoute == NavRoutes.PLAY,
                     onClick = { navController.navigateTab(NavRoutes.PLAY) },
-                    icon = { Icon(Icons.Filled.SportsEsports, contentDescription = null) },
+                    icon = {
+                        Icon(
+                            painterResource(R.drawable.ic_nav_play),
+                            contentDescription = stringResource(R.string.nav_play),
+                        )
+                    },
                     label = { Text(stringResource(R.string.nav_play)) },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = accent,
-                        selectedTextColor = accent,
-                        indicatorColor = palette.pillFillSelected.copy(alpha = 0.45f),
-                        unselectedIconColor = palette.captionText,
-                        unselectedTextColor = palette.captionText,
-                    ),
+                    colors = navItemColors(palette, accent),
                 )
                 NavigationBarItem(
                     selected = currentRoute == NavRoutes.SETTINGS,
                     onClick = { navController.navigateTab(NavRoutes.SETTINGS) },
-                    icon = { Icon(Icons.Default.Settings, contentDescription = null) },
+                    icon = {
+                        Icon(
+                            painterResource(R.drawable.ic_nav_settings),
+                            contentDescription = stringResource(R.string.nav_settings),
+                        )
+                    },
                     label = { Text(stringResource(R.string.nav_settings)) },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = accent,
-                        selectedTextColor = accent,
-                        indicatorColor = palette.pillFillSelected.copy(alpha = 0.45f),
-                        unselectedIconColor = palette.captionText,
-                        unselectedTextColor = palette.captionText,
-                    ),
+                    colors = navItemColors(palette, accent),
                 )
                 NavigationBarItem(
                     selected = currentRoute == NavRoutes.SCORES,
                     onClick = { navController.navigateTab(NavRoutes.SCORES) },
-                    icon = { Icon(Icons.Default.Star, contentDescription = null) },
+                    icon = {
+                        Icon(
+                            painterResource(R.drawable.ic_nav_scores),
+                            contentDescription = stringResource(R.string.nav_scores),
+                        )
+                    },
                     label = { Text(stringResource(R.string.nav_scores)) },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = accent,
-                        selectedTextColor = accent,
-                        indicatorColor = palette.pillFillSelected.copy(alpha = 0.45f),
-                        unselectedIconColor = palette.captionText,
-                        unselectedTextColor = palette.captionText,
-                    ),
+                    colors = navItemColors(palette, accent),
+                )
+                NavigationBarItem(
+                    selected = currentRoute == NavRoutes.ABOUT,
+                    onClick = { navController.navigateTab(NavRoutes.ABOUT) },
+                    icon = {
+                        Icon(
+                            painterResource(R.drawable.ic_nav_about),
+                            contentDescription = stringResource(R.string.nav_about),
+                        )
+                    },
+                    label = { Text(stringResource(R.string.nav_about)) },
+                    colors = navItemColors(palette, accent),
                 )
             }
         },
@@ -155,6 +153,19 @@ fun TicTacToeApp(vm: GameViewModel) {
             composable(NavRoutes.SCORES) {
                 ScoresScreen(vm = vm, palette = palette)
             }
+            composable(NavRoutes.ABOUT) {
+                AboutScreen(palette = palette)
+            }
         }
     }
 }
+
+@Composable
+private fun navItemColors(palette: ru.akarakuts.tictactoe.theme.BoardPalette, accent: androidx.compose.ui.graphics.Color) =
+    NavigationBarItemDefaults.colors(
+        selectedIconColor = accent,
+        selectedTextColor = accent,
+        indicatorColor = palette.pillFillSelected.copy(alpha = 0.45f),
+        unselectedIconColor = palette.captionText,
+        unselectedTextColor = palette.captionText,
+    )

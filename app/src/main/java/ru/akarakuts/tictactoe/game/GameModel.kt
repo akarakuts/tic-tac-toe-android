@@ -7,7 +7,7 @@ data class GameModel(
     val cells: List<Cell>,
     val currentPlayer: Player,
 ) {
-    private val winLines: List<List<Int>> = makeWinLines(boardSize, winLength)
+    internal val winLines: List<List<Int>> = makeWinLines(boardSize, winLength)
 
     init {
         require(boardSize in BOARD_RANGE)
@@ -62,34 +62,21 @@ data class GameModel(
         return cells[row * boardSize + col]
     }
 
-    fun winningLineIndices(): List<Int>? {
+    private fun findWinningLine(): List<Int>? {
         for (line in winLines) {
-            val a = cells[line.first()]
-            if (a !is Cell.Occupied) continue
-            var allMatch = true
-            for (idx in line.drop(1)) {
-                if (cells[idx] != a) {
-                    allMatch = false
-                    break
-                }
-            }
-            if (allMatch) return line
+            val first = cells[line.first()]
+            if (first !is Cell.Occupied) continue
+            if (line.drop(1).all { cells[it] == first }) return line
         }
         return null
     }
 
+    fun winningLineIndices(): List<Int>? = findWinningLine()
+
     fun outcome(): GameOutcome {
-        for (line in winLines) {
-            val a = cells[line.first()]
-            if (a !is Cell.Occupied) continue
-            var win = true
-            for (idx in line.drop(1)) {
-                if (cells[idx] != a) {
-                    win = false
-                    break
-                }
-            }
-            if (win) return GameOutcome.Win(a.player)
+        findWinningLine()?.let { line ->
+            val winner = cells[line.first()] as Cell.Occupied
+            return GameOutcome.Win(winner.player)
         }
         val full = cells.all { it is Cell.Occupied }
         return if (full) GameOutcome.Draw else GameOutcome.InProgress

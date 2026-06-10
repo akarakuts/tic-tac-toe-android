@@ -1,5 +1,7 @@
 package ru.akarakuts.tictactoe.ui
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,18 +17,24 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ru.akarakuts.tictactoe.R
 import ru.akarakuts.tictactoe.game.Cell
 import ru.akarakuts.tictactoe.game.GameModel
 import ru.akarakuts.tictactoe.game.GameOutcome
@@ -46,6 +54,9 @@ fun GameBoard(
     val outcome = game.outcome()
     val winIndices = if (outcome is GameOutcome.Win) game.winningLineIndices() else null
     val canHumanInteract = outcome == GameOutcome.InProgress && !humanBlocked
+    val emptyDesc = stringResource(R.string.a11y_cell_empty)
+    val crossDesc = stringResource(R.string.a11y_cell_cross)
+    val noughtDesc = stringResource(R.string.a11y_cell_nought)
 
     Box(
         modifier = modifier
@@ -74,31 +85,50 @@ fun GameBoard(
                         repeat(n) { col ->
                             val checker = (row + col) % 2 == 0
                             val cellBg = if (checker) palette.cellEven else palette.cellOdd
-                            val mark = when (val c = game.cell(row, col)) {
+                            val cell = game.cell(row, col)
+                            val mark = when (cell) {
                                 Cell.Empty -> ""
-                                is Cell.Occupied -> if (c.player == Player.X) "✕" else "○"
+                                is Cell.Occupied -> if (cell.player == Player.X) "✕" else "○"
                             }
-                            val tint = when (val c = game.cell(row, col)) {
+                            val tint = when (cell) {
                                 Cell.Empty -> palette.statusText
-                                is Cell.Occupied -> if (c.player == Player.X) palette.crossMark else palette.noughtMark
+                                is Cell.Occupied -> if (cell.player == Player.X) palette.crossMark else palette.noughtMark
                             }
+                            val cellDesc = when (cell) {
+                                Cell.Empty -> stringResource(R.string.a11y_cell_position, row + 1, col + 1, emptyDesc)
+                                is Cell.Occupied -> stringResource(
+                                    R.string.a11y_cell_position,
+                                    row + 1,
+                                    col + 1,
+                                    if (cell.player == Player.X) crossDesc else noughtDesc,
+                                )
+                            }
+                            val markScale by animateFloatAsState(
+                                targetValue = if (mark.isEmpty()) 0.88f else 1f,
+                                animationSpec = spring(stiffness = 520f, dampingRatio = 0.62f),
+                                label = "markScale",
+                            )
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
                                     .fillMaxHeight()
                                     .background(cellBg)
+                                    .semantics { contentDescription = cellDesc }
                                     .clickable(enabled = canHumanInteract) {
                                         onCell(row, col)
                                     },
                                 contentAlignment = Alignment.Center,
                             ) {
-                                Text(
-                                    text = mark,
-                                    color = tint,
-                                    fontSize = cellFontSize,
-                                    fontWeight = FontWeight.Bold,
-                                    maxLines = 1,
-                                )
+                                if (mark.isNotEmpty()) {
+                                    Text(
+                                        text = mark,
+                                        color = tint,
+                                        fontSize = cellFontSize,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
+                                        modifier = Modifier.scale(markScale),
+                                    )
+                                }
                             }
                         }
                     }
