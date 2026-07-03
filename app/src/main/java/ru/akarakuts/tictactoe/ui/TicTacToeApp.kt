@@ -16,6 +16,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
@@ -50,16 +51,17 @@ private fun NavController.navigateTab(route: String) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TicTacToeApp(vm: GameViewModel) {
+    val state by vm.state.collectAsStateWithLifecycle()
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route ?: NavRoutes.PLAY
 
     val dark = isSystemInDarkTheme()
     val accent = MaterialTheme.colorScheme.primary
-    val palette = boardPalette(vm.progress.selectedTheme, dark, accent)
+    val palette = boardPalette(state.progress.selectedTheme, dark, accent)
 
     // First-launch onboarding takes over until the user completes it.
-    if (!vm.progress.onboardingShown) {
+    if (!state.progress.onboardingShown) {
         OnboardingScreen(palette = palette, onDone = { vm.markOnboardingShown() })
         return
     }

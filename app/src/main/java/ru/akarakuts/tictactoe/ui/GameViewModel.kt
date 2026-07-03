@@ -1,13 +1,17 @@
 package ru.akarakuts.tictactoe.ui
 
 import android.app.Application
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import ru.akarakuts.tictactoe.audio.GameSoundFx
 import ru.akarakuts.tictactoe.game.AIDifficulty
 import ru.akarakuts.tictactoe.game.BoardVisualStyle
@@ -20,14 +24,15 @@ import ru.akarakuts.tictactoe.game.Player
 import ru.akarakuts.tictactoe.game.TicTacToeAI
 import ru.akarakuts.tictactoe.progress.GameProgress
 import ru.akarakuts.tictactoe.progress.GameProgressStore
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /**
  * Bridges game rules ([GameModel]), persistence ([GameProgressStore]), AI ([TicTacToeAI]) on a worker thread,
- * and UI feedback ([GameSoundFx]). Renamed mutators use `apply*` to avoid JVM clashes with property names.
+ * and UI feedback ([GameSoundFx]). All observable state is funnelled through a single
+ * [StateFlow]<[GameState]>; the individual read-only properties below delegate to it so existing
+ * screens keep reading `vm.progress`, `vm.game`, etc. unchanged while a single source of truth
+ * powers recomposition.
+ *
+ * Renamed mutators use `apply*` to avoid JVM clashes with property names.
  */
 class GameViewModel(
     application: Application,
@@ -36,47 +41,33 @@ class GameViewModel(
 
     private val store = GameProgressStore(application)
 
-    var progress by mutableStateOf(store.load())
-        private set
+    private val _state = MutableStateFlow(GameState.initial(store.load()))
+    /** Single source of truth for the UI; screens collect this via `collectAsStateWithLifecycle()`. */
+    val state: StateFlow<GameState> = _state.asStateFlow()
 
-    var boardSize by mutableIntStateOf(progress.boardSize)
-        private set
-
-    var winLength by mutableIntStateOf(progress.winLength)
-        private set
-
-    var game by mutableStateOf(GameModel.new(progress.boardSize, progress.winLength))
-        private set
-
-    var opponentMode by mutableStateOf(progress.opponentMode)
-        private set
-
-    var humanPlayer by mutableStateOf(progress.humanPlayer)
-        private set
-
-    var aiThinking by mutableStateOf(false)
-        private set
-
-    /** Ordered moves of the current round — drives undo, last-move highlight, replay. */
-    var moveHistory by mutableStateOf<List<Move>>(emptyList())
-        private set
-
-    /** Last placed mark, for the board highlight ring. */
-    val lastMove: Move? get() = moveHistory.lastOrNull()
-
-    /** Cell briefly highlighted by the hint feature; cleared on the next move. */
-    var hintMove by mutableStateOf<Move?>(null)
-        private set
+    // Read-only delegating accessors — keep the existing `vm.x` call sites working.
+    val progress: GameProgress get() = _state.value.progress
+    val boardSize: Int get() = _state.value.boardSize
+    val winLength: Int get() = _state.value.winLength
+    val game: GameModel get() = _state.value.game
+    val opponentMode: OpponentMode get() = _state.value.opponentMode
+    val humanPlayer: Player get() = _state.value.humanPlayer
+    val aiThinking: Boolean get() = _state.value.aiThinking
+    val moveHistory: List<Move> get() = _state.value.moveHistory
+    val lastMove: Move? get() = _state.value.lastMove
+    val hintMove: Move? get() = _state.value.hintMove
+    val seriesWinner: Player? get() = _state.value.seriesWinner
 
     private var roundOutcomeRecorded = false
     private var inputEpoch = 0
     private var aiJob: Job? = null
 
     init {
-        GameSoundFx.soundEffectsEnabled = progress.soundEnabled
-        GameSoundFx.volume = progress.soundVolume
-        LocaleController.restore(progress.appLanguage)
-        game = restoreGameOrNew()
+        val p = progress
+        GameSoundFx.soundEffectsEnabled = p.soundEnabled
+        GameSoundFx.volume = p.soundVolume
+        LocaleController.restore(p.appLanguage)
+        _state.update { it.copy(game = restoreGameOrNew()) }
         maybeKickAi()
     }
 
@@ -85,17 +76,23 @@ class GameViewModel(
     fun bumpEpochAndCancelAi() {
         aiJob?.cancel()
         aiJob = null
-        aiThinking = false
         inputEpoch += 1
+        _state.update { it.copy(aiThinking = false) }
     }
 
     fun applyBoardConfiguration() {
         bumpEpochAndCancelAi()
         roundOutcomeRecorded = false
-        if (winLength > boardSize) winLength = boardSize
-        game = GameModel.new(boardSize, winLength)
-        moveHistory = emptyList()
-        hintMove = null
+        _state.update {
+            val winLen = if (it.winLength > it.boardSize) it.boardSize else it.winLength
+            it.copy(
+                winLength = winLen,
+                game = GameModel.new(it.boardSize, winLen),
+                moveHistory = emptyList(),
+                hintMove = null,
+                seriesWinner = null,
+            )
+        }
         syncProgressMatchSettings()
         persistGameSnapshot()
         maybeKickAi()
@@ -103,46 +100,43 @@ class GameViewModel(
 
     fun applyBoardSize(size: Int) {
         if (size !in GameModel.BOARD_RANGE || size == boardSize) return
-        boardSize = size
+        _state.update { it.copy(boardSize = size) }
         applyBoardConfiguration()
     }
 
     fun applyWinLength(len: Int) {
         if (len !in GameModel.BOARD_RANGE || len > boardSize || len == winLength) return
-        winLength = len
+        _state.update { it.copy(winLength = len) }
         applyBoardConfiguration()
     }
 
     fun applyOpponentMode(mode: OpponentMode) {
         if (mode == opponentMode) return
-        opponentMode = mode
+        _state.update { it.copy(opponentMode = mode) }
         applyBoardConfiguration()
     }
 
     fun applyHumanSide(p: Player) {
         if (!isVsAi() || humanPlayer == p) return
-        humanPlayer = p
+        _state.update { it.copy(humanPlayer = p) }
         applyBoardConfiguration()
     }
 
     fun applyAiDifficulty(d: AIDifficulty) {
         if (!isVsAi() || progress.aiDifficulty == d) return
-        progress = progress.copy(aiDifficulty = d)
-        store.save(progress)
+        _state.update { it.copy(progress = progress.copy(aiDifficulty = d).also { store.save(it) }) }
         applyBoardConfiguration()
     }
 
     fun selectTheme(style: BoardVisualStyle) {
         if (style !in progress.unlockedThemes || progress.selectedTheme == style) return
-        progress = progress.copy(selectedTheme = style)
-        store.save(progress)
+        updateProgress { it.copy(selectedTheme = style) }
     }
 
     fun toggleSound() {
-        progress = progress.copy(soundEnabled = !progress.soundEnabled)
+        updateProgress { it.copy(soundEnabled = !it.soundEnabled) }
         GameSoundFx.soundEffectsEnabled = progress.soundEnabled
         GameSoundFx.volume = progress.soundVolume
-        store.save(progress)
         if (progress.soundEnabled) GameSoundFx.playMoveTap()
     }
 
@@ -150,18 +144,21 @@ class GameViewModel(
     fun applySoundVolume(volume: Float) {
         val clamped = volume.coerceIn(0f, 1f)
         if (progress.soundVolume == clamped) return
-        progress = progress.copy(soundVolume = clamped)
+        updateProgress { it.copy(soundVolume = clamped) }
         GameSoundFx.volume = clamped
-        store.save(progress)
     }
 
     fun newGame() {
         bumpEpochAndCancelAi()
         roundOutcomeRecorded = false
-        game = game.reset()
-        moveHistory = emptyList()
-        hintMove = null
-        seriesWinner = null
+        _state.update {
+            it.copy(
+                game = it.game.reset(),
+                moveHistory = emptyList(),
+                hintMove = null,
+                seriesWinner = null,
+            )
+        }
         persistGameSnapshot()
         maybeKickAi()
     }
@@ -177,18 +174,12 @@ class GameViewModel(
             GameSoundFx.playInvalidMove()
             return
         }
-        game = next
-        recordMove(row, col, mover)
+        _state.update { it.copy(game = next, moveHistory = it.moveHistory + Move(row, col, mover), hintMove = null) }
         persistGameSnapshot()
         if (before == GameOutcome.InProgress && game.outcome() == GameOutcome.InProgress) {
             GameSoundFx.playMoveTap()
         }
         onBoardUpdatedAfterHumanMove()
-    }
-
-    private fun recordMove(row: Int, col: Int, player: Player) {
-        moveHistory = moveHistory + Move(row, col, player)
-        hintMove = null
     }
 
     private fun onBoardUpdatedAfterHumanMove() {
@@ -223,9 +214,9 @@ class GameViewModel(
         val stepsToRevert = if (isVsAi() && moveHistory.size >= 2 &&
             moveHistory.last().player == aiPlayer) 2 else 1
         val trimmed = moveHistory.dropLast(stepsToRevert)
-        moveHistory = trimmed
-        hintMove = null
-        game = replayHistory(trimmed)
+        _state.update {
+            it.copy(moveHistory = trimmed, hintMove = null, game = replayHistory(trimmed))
+        }
         persistGameSnapshot()
     }
 
@@ -241,37 +232,52 @@ class GameViewModel(
             val move = withContext(kotlinx.coroutines.Dispatchers.Default) {
                 TicTacToeAI.bestMove(mover, snapshot, difficulty)
             } ?: return@launch
-            hintMove = Move(move.first, move.second, mover)
+            _state.update { it.copy(hintMove = Move(move.first, move.second, mover)) }
         }
     }
 
     fun applyHintsEnabled(enabled: Boolean) {
         if (progress.hintsEnabled == enabled) return
-        progress = progress.copy(hintsEnabled = enabled)
-        store.save(progress)
-        if (!enabled) hintMove = null
+        updateProgress { it.copy(hintsEnabled = enabled) }
+        if (!enabled) _state.update { it.copy(hintMove = null) }
     }
 
     /** Applies an in-app language choice; AppCompat recreates the Activity to pick it up. */
     fun applyLanguage(code: String) {
         if (progress.appLanguage == code) return
-        progress = progress.copy(appLanguage = code)
-        store.save(progress)
+        updateProgress { it.copy(appLanguage = code) }
         LocaleController.apply(code)
     }
 
     /** Marks the onboarding as completed so it no longer shows on launch. */
     fun markOnboardingShown() {
         if (progress.onboardingShown) return
-        progress = progress.copy(onboardingShown = true)
-        store.save(progress)
+        updateProgress { it.copy(onboardingShown = true) }
     }
 
     /** Surface onboarding again from Settings; reset the flag so the flow re-appears. */
     fun showOnboardingAgain() {
-        progress = progress.copy(onboardingShown = false)
-        store.save(progress)
+        updateProgress { it.copy(onboardingShown = false) }
     }
+
+    fun applySeriesEnabled(enabled: Boolean) {
+        if (progress.seriesEnabled == enabled) return
+        updateProgress {
+            it.copy(seriesEnabled = enabled, seriesP1Wins = 0, seriesP2Wins = 0, seriesDraws = 0)
+        }
+        _state.update { it.copy(seriesWinner = null) }
+    }
+
+    fun applySeriesTarget(target: Int) {
+        val clamped = target.coerceIn(2, 11)
+        if (progress.seriesTarget == clamped) return
+        updateProgress {
+            it.copy(seriesTarget = clamped, seriesP1Wins = 0, seriesP2Wins = 0, seriesDraws = 0)
+        }
+        _state.update { it.copy(seriesWinner = null) }
+    }
+
+    private fun isVsAi() = opponentMode == OpponentMode.HumanComputer
 
     private fun maybeRecordOutcome() {
         if (roundOutcomeRecorded) return
@@ -281,12 +287,13 @@ class GameViewModel(
                 roundOutcomeRecorded = true
                 val humanWon = (o as? GameOutcome.Win)?.player == humanPlayer
                 val beforeUnlocked = progress.unlockedThemes.size
-                progress = when (opponentMode) {
-                    OpponentMode.HumanComputer -> progress.applyVsAIOutcome(humanWon = humanWon)
-                    OpponentMode.HumanHuman ->
-                        progress.applyTwoPlayerOutcome(winner = (o as? GameOutcome.Win)?.player)
+                updateProgress { p ->
+                    when (opponentMode) {
+                        OpponentMode.HumanComputer -> p.applyVsAIOutcome(humanWon = humanWon)
+                        OpponentMode.HumanHuman ->
+                            p.applyTwoPlayerOutcome(winner = (o as? GameOutcome.Win)?.player)
+                    }
                 }
-                store.save(progress)
                 // Cue: a theme was just unlocked by this round.
                 if (progress.unlockedThemes.size > beforeUnlocked) {
                     GameSoundFx.playThemeUnlock()
@@ -308,7 +315,7 @@ class GameViewModel(
      * the series is decided: [seriesWinner] is set and the in-progress counters reset for the next
      * match.
      */
-    private fun applySeriesRound(winner: ru.akarakuts.tictactoe.game.Player?) {
+    private fun applySeriesRound(winner: Player?) {
         val p1 = if (winner == Player.X) progress.seriesP1Wins + 1 else progress.seriesP1Wins
         val p2 = if (winner == Player.O) progress.seriesP2Wins + 1 else progress.seriesP2Wins
         val draws = if (winner == null) progress.seriesDraws + 1 else progress.seriesDraws
@@ -318,41 +325,15 @@ class GameViewModel(
             p2 >= target -> Player.O
             else -> null
         }
-        progress = if (decided != null) {
-            progress.copy(seriesP1Wins = 0, seriesP2Wins = 0, seriesDraws = 0)
-        } else {
-            progress.copy(seriesP1Wins = p1, seriesP2Wins = p2, seriesDraws = draws)
+        updateProgress {
+            if (decided != null) {
+                it.copy(seriesP1Wins = 0, seriesP2Wins = 0, seriesDraws = 0)
+            } else {
+                it.copy(seriesP1Wins = p1, seriesP2Wins = p2, seriesDraws = draws)
+            }
         }
-        seriesWinner = decided
-        store.save(progress)
+        _state.update { it.copy(seriesWinner = decided) }
     }
-
-    /** Winner of the just-completed series, if any; cleared when a new round begins. */
-    var seriesWinner by mutableStateOf<ru.akarakuts.tictactoe.game.Player?>(null)
-        private set
-
-    fun applySeriesEnabled(enabled: Boolean) {
-        if (progress.seriesEnabled == enabled) return
-        progress = progress.copy(
-            seriesEnabled = enabled,
-            seriesP1Wins = 0, seriesP2Wins = 0, seriesDraws = 0,
-        )
-        seriesWinner = null
-        store.save(progress)
-    }
-
-    fun applySeriesTarget(target: Int) {
-        val clamped = target.coerceIn(2, 11)
-        if (progress.seriesTarget == clamped) return
-        progress = progress.copy(
-            seriesTarget = clamped,
-            seriesP1Wins = 0, seriesP2Wins = 0, seriesDraws = 0,
-        )
-        seriesWinner = null
-        store.save(progress)
-    }
-
-    private fun isVsAi() = opponentMode == OpponentMode.HumanComputer
 
     private fun maybeKickAi() {
         if (!isVsAi()) return
@@ -366,7 +347,7 @@ class GameViewModel(
         val difficulty = progress.aiDifficulty
 
         aiJob = viewModelScope.launch {
-            aiThinking = true
+            _state.update { it.copy(aiThinking = true) }
             try {
                 delay(220)
                 if (epoch != inputEpoch) return@launch
@@ -380,8 +361,7 @@ class GameViewModel(
                 val (r, c) = move ?: return@launch
                 val next = game.play(r, c) ?: return@launch
                 val wasInProgress = game.outcome() == GameOutcome.InProgress
-                game = next
-                recordMove(r, c, ai)
+                _state.update { it.copy(game = next, moveHistory = it.moveHistory + Move(r, c, ai)) }
                 persistGameSnapshot()
                 if (wasInProgress && game.outcome() == GameOutcome.InProgress) {
                     GameSoundFx.playAiMove()
@@ -391,19 +371,25 @@ class GameViewModel(
                     GameSoundFx.playWinFanfare()
                 }
             } finally {
-                if (epoch == inputEpoch) aiThinking = false
+                if (epoch == inputEpoch) _state.update { it.copy(aiThinking = false) }
             }
         }
     }
 
     private fun syncProgressMatchSettings() {
-        progress = progress.copy(
-            boardSize = boardSize,
-            winLength = winLength,
-            opponentMode = opponentMode,
-            humanPlayer = humanPlayer,
-        )
-        store.save(progress)
+        updateProgress {
+            it.copy(
+                boardSize = boardSize,
+                winLength = winLength,
+                opponentMode = opponentMode,
+                humanPlayer = humanPlayer,
+            )
+        }
+    }
+
+    /** Updates the persisted [GameProgress] inside the state atomically and saves it to the store. */
+    private inline fun updateProgress(transform: (GameProgress) -> GameProgress) {
+        _state.update { it.copy(progress = transform(it.progress).also { p -> store.save(p) }) }
     }
 
     private fun persistGameSnapshot() {
@@ -419,8 +405,9 @@ class GameViewModel(
             ?: GameModel.new(boardSize, winLength)
     }
 
-    /** Status line for HUD */
+    /** Status line for HUD. Reads from [s] so callers can pass the collected snapshot. */
     fun statusText(
+        s: GameState,
         turnCrosses: String,
         turnNoughts: String,
         yourCrosses: String,
@@ -436,33 +423,35 @@ class GameViewModel(
         winComputer: String,
         aiThinking: String,
     ): String {
-        if (this.aiThinking && isVsAi() && game.outcome() == GameOutcome.InProgress) {
+        val isVsAi = s.opponentMode == OpponentMode.HumanComputer
+        val humanPlayer = s.humanPlayer
+        val ai = humanPlayer.other
+        if (s.aiThinking && isVsAi && s.game.outcome() == GameOutcome.InProgress) {
             return aiThinking
         }
-        return when (val o = game.outcome()) {
+        return when (val o = s.game.outcome()) {
             GameOutcome.Draw -> draw
-            is GameOutcome.Win -> when (opponentMode) {
+            is GameOutcome.Win -> when (s.opponentMode) {
                 OpponentMode.HumanHuman ->
                     if (o.player == Player.X) winCrosses else winNoughts
 
                 OpponentMode.HumanComputer ->
                     if (o.player == humanPlayer) winYou else winComputer
             }
-            GameOutcome.InProgress -> when (opponentMode) {
+            GameOutcome.InProgress -> when (s.opponentMode) {
                 OpponentMode.HumanHuman ->
-                    if (game.currentPlayer == Player.X) turnCrosses else turnNoughts
+                    if (s.game.currentPlayer == Player.X) turnCrosses else turnNoughts
 
                 OpponentMode.HumanComputer -> {
-                    val ai = aiPlayer
                     when {
-                        game.currentPlayer == humanPlayer ->
+                        s.game.currentPlayer == humanPlayer ->
                             if (humanPlayer == Player.X) yourCrosses else yourNoughts
 
-                        game.currentPlayer == ai ->
+                        s.game.currentPlayer == ai ->
                             if (ai == Player.X) computerCrosses else computerNoughts
 
                         else ->
-                            if (game.currentPlayer == Player.X) onlyCrosses else onlyNoughts
+                            if (s.game.currentPlayer == Player.X) onlyCrosses else onlyNoughts
                     }
                 }
             }

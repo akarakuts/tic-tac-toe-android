@@ -17,6 +17,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -29,9 +31,11 @@ import ru.akarakuts.tictactoe.theme.BoardPalette
 /** Scores tab: vs-AI stats and theme unlock legend. */
 @Composable
 fun ScoresScreen(vm: GameViewModel, palette: BoardPalette) {
+    val state by vm.state.collectAsStateWithLifecycle()
+    val progress = state.progress
     val streakLine =
-        "${stringResource(R.string.game_stats_streak)} ${vm.progress.currentWinStreak}  ·  " +
-            "${stringResource(R.string.game_stats_best)} ${vm.progress.bestWinStreak}"
+        "${stringResource(R.string.game_stats_streak)} ${progress.currentWinStreak}  ·  " +
+            "${stringResource(R.string.game_stats_best)} ${progress.bestWinStreak}"
 
     BoxWithConstraints(
         modifier = Modifier
@@ -84,7 +88,7 @@ fun ScoresScreen(vm: GameViewModel, palette: BoardPalette) {
                                 color = palette.captionText,
                                 fontSize = 12.sp,
                             )
-                            StatsGlyph("✓", vm.progress.winsVsAI, palette.noughtMark)
+                            StatsGlyph("✓", progress.winsVsAI, palette.noughtMark)
                         }
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
@@ -92,7 +96,7 @@ fun ScoresScreen(vm: GameViewModel, palette: BoardPalette) {
                                 color = palette.captionText,
                                 fontSize = 12.sp,
                             )
-                            StatsGlyph("✗", vm.progress.lossesVsAI, palette.crossMark)
+                            StatsGlyph("✗", progress.lossesVsAI, palette.crossMark)
                         }
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
@@ -100,7 +104,7 @@ fun ScoresScreen(vm: GameViewModel, palette: BoardPalette) {
                                 color = palette.captionText,
                                 fontSize = 12.sp,
                             )
-                            StatsGlyph("=", vm.progress.drawsVsAI, palette.statusText.copy(alpha = palette.statusText.alpha * 0.82f))
+                            StatsGlyph("=", progress.drawsVsAI, palette.statusText.copy(alpha = palette.statusText.alpha * 0.82f))
                         }
                     }
                     Text(
@@ -112,9 +116,9 @@ fun ScoresScreen(vm: GameViewModel, palette: BoardPalette) {
                     )
                     Text(
                         text = stringResource(R.string.scores_record_hint,
-                            vm.progress.winsVsAI,
-                            vm.progress.lossesVsAI,
-                            vm.progress.drawsVsAI),
+                            progress.winsVsAI,
+                            progress.lossesVsAI,
+                            progress.drawsVsAI),
                         color = palette.captionText,
                         fontSize = 13.sp,
                         modifier = Modifier.padding(top = 12.dp),
@@ -150,7 +154,7 @@ fun ScoresScreen(vm: GameViewModel, palette: BoardPalette) {
                                 color = palette.captionText,
                                 fontSize = 12.sp,
                             )
-                            StatsGlyph("✕", vm.progress.p1Wins, palette.crossMark)
+                            StatsGlyph("✕", progress.p1Wins, palette.crossMark)
                         }
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
@@ -158,7 +162,7 @@ fun ScoresScreen(vm: GameViewModel, palette: BoardPalette) {
                                 color = palette.captionText,
                                 fontSize = 12.sp,
                             )
-                            StatsGlyph("○", vm.progress.p2Wins, palette.noughtMark)
+                            StatsGlyph("○", progress.p2Wins, palette.noughtMark)
                         }
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
@@ -166,14 +170,14 @@ fun ScoresScreen(vm: GameViewModel, palette: BoardPalette) {
                                 color = palette.captionText,
                                 fontSize = 12.sp,
                             )
-                            StatsGlyph("=", vm.progress.humanDraws, palette.statusText.copy(alpha = palette.statusText.alpha * 0.82f))
+                            StatsGlyph("=", progress.humanDraws, palette.statusText.copy(alpha = palette.statusText.alpha * 0.82f))
                         }
                     }
                     Text(
                         text = stringResource(R.string.scores_two_player_record,
-                            vm.progress.p1Wins,
-                            vm.progress.p2Wins,
-                            vm.progress.humanDraws),
+                            progress.p1Wins,
+                            progress.p2Wins,
+                            progress.humanDraws),
                         color = palette.captionText,
                         fontSize = 13.sp,
                         modifier = Modifier.padding(top = 16.dp),

@@ -11,6 +11,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -180,12 +182,13 @@ fun ThemeChipPair(
 
 @Composable
 fun ThemeChip(vm: GameViewModel, palette: BoardPalette, modifier: Modifier, style: BoardVisualStyle) {
-    val unlocked = style in vm.progress.unlockedThemes
+    val state by vm.state.collectAsStateWithLifecycle()
+    val unlocked = style in state.progress.unlockedThemes
     val label = themeTitle(style) +
         if (unlocked) "" else stringResource(R.string.game_theme_locked_badge)
     HudPill(
         text = label,
-        selected = vm.progress.selectedTheme == style,
+        selected = state.progress.selectedTheme == style,
         enabled = unlocked,
         palette = palette,
         onClick = { vm.selectTheme(style) },
@@ -212,9 +215,10 @@ fun AiChip(
     enabled: Boolean,
     modifier: Modifier,
 ) {
+    val state by vm.state.collectAsStateWithLifecycle()
     HudPill(
         text = label,
-        selected = enabled && vm.progress.aiDifficulty == difficulty,
+        selected = enabled && state.progress.aiDifficulty == difficulty,
         enabled = enabled,
         palette = palette,
         onClick = { vm.applyAiDifficulty(difficulty) },
@@ -225,6 +229,7 @@ fun AiChip(
 
 @Composable
 fun WinLenGrid(vm: GameViewModel, palette: BoardPalette) {
+    val state by vm.state.collectAsStateWithLifecycle()
     val sides = listOf(3, 4, 5, 6)
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         sides.chunked(2).forEach { row ->
@@ -233,10 +238,10 @@ fun WinLenGrid(vm: GameViewModel, palette: BoardPalette) {
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 row.forEach { k ->
-                    val ok = k <= vm.boardSize
+                    val ok = k <= state.boardSize
                     HudPill(
                         text = k.toString(),
-                        selected = ok && vm.winLength == k,
+                        selected = ok && state.winLength == k,
                         enabled = ok,
                         palette = palette,
                         onClick = { vm.applyWinLength(k) },
@@ -251,6 +256,7 @@ fun WinLenGrid(vm: GameViewModel, palette: BoardPalette) {
 
 @Composable
 fun BoardSizeGrid(vm: GameViewModel, palette: BoardPalette) {
+    val state by vm.state.collectAsStateWithLifecycle()
     val sides = listOf(3, 4, 5, 6)
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         sides.chunked(2).forEach { row ->
@@ -261,7 +267,7 @@ fun BoardSizeGrid(vm: GameViewModel, palette: BoardPalette) {
                 row.forEach { s ->
                     HudPill(
                         text = "${s}×$s",
-                        selected = vm.boardSize == s,
+                        selected = state.boardSize == s,
                         enabled = true,
                         palette = palette,
                         onClick = { vm.applyBoardSize(s) },
@@ -276,10 +282,11 @@ fun BoardSizeGrid(vm: GameViewModel, palette: BoardPalette) {
 
 @Composable
 fun ModeAndAiSection(vm: GameViewModel, palette: BoardPalette) {
+    val state by vm.state.collectAsStateWithLifecycle()
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         HudPill(
             text = stringResource(R.string.game_mode_vs_computer),
-            selected = vm.opponentMode == OpponentMode.HumanComputer,
+            selected = state.opponentMode == OpponentMode.HumanComputer,
             enabled = true,
             palette = palette,
             onClick = { vm.applyOpponentMode(OpponentMode.HumanComputer) },
@@ -287,7 +294,7 @@ fun ModeAndAiSection(vm: GameViewModel, palette: BoardPalette) {
         )
         HudPill(
             text = stringResource(R.string.game_mode_two_players),
-            selected = vm.opponentMode == OpponentMode.HumanHuman,
+            selected = state.opponentMode == OpponentMode.HumanHuman,
             enabled = true,
             palette = palette,
             onClick = { vm.applyOpponentMode(OpponentMode.HumanHuman) },
@@ -295,7 +302,7 @@ fun ModeAndAiSection(vm: GameViewModel, palette: BoardPalette) {
         )
 
         SectionCaption(stringResource(R.string.game_settings_ai_difficulty), palette)
-        val aiOn = vm.opponentMode == OpponentMode.HumanComputer
+        val aiOn = state.opponentMode == OpponentMode.HumanComputer
         Row(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             modifier = Modifier.fillMaxWidth(),
@@ -313,16 +320,16 @@ fun ModeAndAiSection(vm: GameViewModel, palette: BoardPalette) {
 
         HudPill(
             text = stringResource(R.string.game_side_crosses),
-            selected = vm.humanPlayer == Player.X && vm.opponentMode == OpponentMode.HumanComputer,
-            enabled = vm.opponentMode == OpponentMode.HumanComputer,
+            selected = state.humanPlayer == Player.X && state.opponentMode == OpponentMode.HumanComputer,
+            enabled = state.opponentMode == OpponentMode.HumanComputer,
             palette = palette,
             onClick = { vm.applyHumanSide(Player.X) },
             modifier = Modifier.fillMaxWidth(),
         )
         HudPill(
             text = stringResource(R.string.game_side_noughts),
-            selected = vm.humanPlayer == Player.O && vm.opponentMode == OpponentMode.HumanComputer,
-            enabled = vm.opponentMode == OpponentMode.HumanComputer,
+            selected = state.humanPlayer == Player.O && state.opponentMode == OpponentMode.HumanComputer,
+            enabled = state.opponentMode == OpponentMode.HumanComputer,
             palette = palette,
             onClick = { vm.applyHumanSide(Player.O) },
             modifier = Modifier.fillMaxWidth(),
@@ -333,17 +340,19 @@ fun ModeAndAiSection(vm: GameViewModel, palette: BoardPalette) {
 /** Best-of-N series toggle and target selector. */
 @Composable
 fun SeriesSection(vm: GameViewModel, palette: BoardPalette) {
+    val state by vm.state.collectAsStateWithLifecycle()
+    val seriesEnabled = state.progress.seriesEnabled
     SectionCaption(stringResource(R.string.game_settings_series), palette)
     HudPill(
-        text = if (vm.progress.seriesEnabled) stringResource(R.string.game_series_on)
+        text = if (seriesEnabled) stringResource(R.string.game_series_on)
         else stringResource(R.string.game_series_off),
-        selected = vm.progress.seriesEnabled,
+        selected = seriesEnabled,
         enabled = true,
         palette = palette,
-        onClick = { vm.applySeriesEnabled(!vm.progress.seriesEnabled) },
+        onClick = { vm.applySeriesEnabled(!seriesEnabled) },
         modifier = Modifier.fillMaxWidth(),
     )
-    if (vm.progress.seriesEnabled) {
+    if (seriesEnabled) {
         SectionCaption(stringResource(R.string.game_settings_series_target), palette)
         // Target wins → underlying best-of. 2=best-of-3, 3=best-of-5, 4=best-of-7, 6=best-of-11.
         Row(
@@ -353,7 +362,7 @@ fun SeriesSection(vm: GameViewModel, palette: BoardPalette) {
             listOf(2, 3, 4, 6).forEach { target ->
                 HudPill(
                     text = target.toString(),
-                    selected = vm.progress.seriesTarget == target,
+                    selected = state.progress.seriesTarget == target,
                     enabled = true,
                     palette = palette,
                     onClick = { vm.applySeriesTarget(target) },

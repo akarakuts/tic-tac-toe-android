@@ -19,6 +19,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -31,6 +33,7 @@ import ru.akarakuts.tictactoe.theme.BoardPalette
 /** Settings tab: rules, opponent, AI difficulty, themes (unlocks), sound. */
 @Composable
 fun SettingsScreen(vm: GameViewModel, palette: BoardPalette) {
+    val state by vm.state.collectAsStateWithLifecycle()
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
@@ -65,15 +68,15 @@ fun SettingsScreen(vm: GameViewModel, palette: BoardPalette) {
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     HudPill(
-                        text = if (vm.progress.soundEnabled) stringResource(R.string.game_sound_on)
+                        text = if (state.progress.soundEnabled) stringResource(R.string.game_sound_on)
                         else stringResource(R.string.game_sound_off),
-                        selected = vm.progress.soundEnabled,
+                        selected = state.progress.soundEnabled,
                         enabled = true,
                         palette = palette,
                         onClick = { vm.toggleSound() },
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    if (vm.progress.soundEnabled) {
+                    if (state.progress.soundEnabled) {
                         Text(
                             text = stringResource(R.string.game_sound_volume),
                             color = palette.captionText,
@@ -81,7 +84,7 @@ fun SettingsScreen(vm: GameViewModel, palette: BoardPalette) {
                             modifier = Modifier.padding(top = 6.dp),
                         )
                         androidx.compose.material3.Slider(
-                            value = vm.progress.soundVolume,
+                            value = state.progress.soundVolume,
                             onValueChange = { vm.applySoundVolume(it) },
                             valueRange = 0f..1f,
                             modifier = Modifier.fillMaxWidth(),
@@ -90,12 +93,12 @@ fun SettingsScreen(vm: GameViewModel, palette: BoardPalette) {
 
                     SectionCaption(stringResource(R.string.game_settings_hints), palette)
                     HudPill(
-                        text = if (vm.progress.hintsEnabled) stringResource(R.string.game_hints_on)
+                        text = if (state.progress.hintsEnabled) stringResource(R.string.game_hints_on)
                         else stringResource(R.string.game_hints_off),
-                        selected = vm.progress.hintsEnabled,
+                        selected = state.progress.hintsEnabled,
                         enabled = true,
                         palette = palette,
-                        onClick = { vm.applyHintsEnabled(!vm.progress.hintsEnabled) },
+                        onClick = { vm.applyHintsEnabled(!state.progress.hintsEnabled) },
                         modifier = Modifier.fillMaxWidth(),
                     )
 
@@ -149,7 +152,7 @@ fun SettingsScreen(vm: GameViewModel, palette: BoardPalette) {
                         codes.forEach { code ->
                             HudPill(
                                 text = languageLabel(code),
-                                selected = vm.progress.appLanguage == code,
+                                selected = state.progress.appLanguage == code,
                                 enabled = true,
                                 palette = palette,
                                 onClick = { vm.applyLanguage(code) },

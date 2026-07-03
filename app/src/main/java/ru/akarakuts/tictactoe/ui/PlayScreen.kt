@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -30,8 +32,10 @@ import ru.akarakuts.tictactoe.theme.BoardPalette
 /** Game tab: adaptive layout, status line, [GameBoard], New game. */
 @Composable
 fun PlayScreen(vm: GameViewModel, palette: BoardPalette) {
+    val state by vm.state.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
     val status = vm.statusText(
+        s = state,
         turnCrosses = stringResource(R.string.game_turn_crosses),
         turnNoughts = stringResource(R.string.game_turn_noughts),
         yourCrosses = stringResource(R.string.game_turn_your_crosses),
@@ -71,18 +75,18 @@ fun PlayScreen(vm: GameViewModel, palette: BoardPalette) {
                     .fillMaxWidth()
                     .padding(bottom = 8.dp),
             )
-            if (vm.progress.seriesEnabled) {
-                val seriesText = vm.seriesWinner?.let { winner ->
+            if (state.progress.seriesEnabled) {
+                val seriesText = state.seriesWinner?.let { winner ->
                     if (winner == ru.akarakuts.tictactoe.game.Player.X)
                         stringResource(R.string.game_series_won_crosses)
                     else
                         stringResource(R.string.game_series_won_noughts)
                 } ?: stringResource(
                     R.string.game_series_status,
-                    vm.progress.seriesP1Wins,
-                    vm.progress.seriesP2Wins,
-                    vm.progress.seriesDraws,
-                    vm.progress.seriesTarget,
+                    state.progress.seriesP1Wins,
+                    state.progress.seriesP2Wins,
+                    state.progress.seriesDraws,
+                    state.progress.seriesTarget,
                 )
                 Text(
                     text = seriesText,
@@ -98,12 +102,12 @@ fun PlayScreen(vm: GameViewModel, palette: BoardPalette) {
 
         val boardBlock = @Composable {
             GameBoard(
-                game = vm.game,
+                game = state.game,
                 palette = palette,
-                humanBlocked = vm.opponentMode == OpponentMode.HumanComputer &&
-                    vm.game.currentPlayer != vm.humanPlayer,
-                lastMove = vm.lastMove,
-                hintMove = vm.hintMove,
+                humanBlocked = state.opponentMode == OpponentMode.HumanComputer &&
+                    state.game.currentPlayer != state.humanPlayer,
+                lastMove = state.lastMove,
+                hintMove = state.hintMove,
                 onCell = { r, c ->
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     vm.cellTap(r, c)
@@ -135,7 +139,7 @@ fun PlayScreen(vm: GameViewModel, palette: BoardPalette) {
                     modifier = Modifier.weight(1f),
                 )
             }
-            if (vm.progress.hintsEnabled) {
+            if (state.progress.hintsEnabled) {
                 Spacer(modifier = Modifier.height(10.dp))
                 HudPrimaryButton(
                     text = stringResource(R.string.game_button_hint),
@@ -194,7 +198,7 @@ fun PlayScreen(vm: GameViewModel, palette: BoardPalette) {
             }
         }
 
-        if (vm.game.outcome() is ru.akarakuts.tictactoe.game.GameOutcome.Win) {
+        if (state.game.outcome() is ru.akarakuts.tictactoe.game.GameOutcome.Win) {
             ConfettiOverlay(palette = palette)
         }
     }
