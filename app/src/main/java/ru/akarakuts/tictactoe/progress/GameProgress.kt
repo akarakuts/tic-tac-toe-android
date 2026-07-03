@@ -16,6 +16,8 @@ data class GameProgress(
     val selectedTheme: BoardVisualStyle = BoardVisualStyle.Classic,
     val aiDifficulty: AIDifficulty = AIDifficulty.Medium,
     val soundEnabled: Boolean = true,
+    /** Master SFX volume multiplier, 0f..1f. */
+    val soundVolume: Float = 1f,
     val boardSize: Int = 3,
     val winLength: Int = 3,
     val opponentMode: OpponentMode = OpponentMode.HumanComputer,

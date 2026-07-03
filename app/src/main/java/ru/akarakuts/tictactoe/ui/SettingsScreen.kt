@@ -73,6 +73,20 @@ fun SettingsScreen(vm: GameViewModel, palette: BoardPalette) {
                         onClick = { vm.toggleSound() },
                         modifier = Modifier.fillMaxWidth(),
                     )
+                    if (vm.progress.soundEnabled) {
+                        Text(
+                            text = stringResource(R.string.game_sound_volume),
+                            color = palette.captionText,
+                            fontSize = 11.sp,
+                            modifier = Modifier.padding(top = 6.dp),
+                        )
+                        androidx.compose.material3.Slider(
+                            value = vm.progress.soundVolume,
+                            onValueChange = { vm.applySoundVolume(it) },
+                            valueRange = 0f..1f,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
 
                     SectionCaption(stringResource(R.string.game_settings_hints), palette)
                     HudPill(

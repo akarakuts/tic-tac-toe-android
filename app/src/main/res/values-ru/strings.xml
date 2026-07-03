@@ -57,6 +57,7 @@
     <string name="game_stats_best">рек.</string>
     <string name="game_sound_on">Звук вкл.</string>
     <string name="game_sound_off">Звук выкл.</string>
+    <string name="game_sound_volume">Громкость</string>
 
     <string name="game_theme_unlock_intro">Темы открываются в режиме «Против компьютера»:</string>
     <string name="game_theme_unlock_details">Аврора — 1-я победа · Роща — 5 побед · Закат — серия 3 · Океан — 10 побед</string>

@@ -74,6 +74,7 @@ class GameViewModel(
 
     init {
         GameSoundFx.soundEffectsEnabled = progress.soundEnabled
+        GameSoundFx.volume = progress.soundVolume
         LocaleController.restore(progress.appLanguage)
         game = restoreGameOrNew()
         maybeKickAi()
@@ -140,8 +141,18 @@ class GameViewModel(
     fun toggleSound() {
         progress = progress.copy(soundEnabled = !progress.soundEnabled)
         GameSoundFx.soundEffectsEnabled = progress.soundEnabled
+        GameSoundFx.volume = progress.soundVolume
         store.save(progress)
         if (progress.soundEnabled) GameSoundFx.playMoveTap()
+    }
+
+    /** Sets the SFX master volume in 0f..1f. */
+    fun applySoundVolume(volume: Float) {
+        val clamped = volume.coerceIn(0f, 1f)
+        if (progress.soundVolume == clamped) return
+        progress = progress.copy(soundVolume = clamped)
+        GameSoundFx.volume = clamped
+        store.save(progress)
     }
 
     fun newGame() {
@@ -267,13 +278,22 @@ class GameViewModel(
             GameOutcome.InProgress -> return
             is GameOutcome.Win, GameOutcome.Draw -> {
                 roundOutcomeRecorded = true
+                val humanWon = (o as? GameOutcome.Win)?.player == humanPlayer
+                val beforeUnlocked = progress.unlockedThemes.size
                 progress = when (opponentMode) {
-                    OpponentMode.HumanComputer ->
-                        progress.applyVsAIOutcome(humanWon = (o as? GameOutcome.Win)?.player == humanPlayer)
+                    OpponentMode.HumanComputer -> progress.applyVsAIOutcome(humanWon = humanWon)
                     OpponentMode.HumanHuman ->
                         progress.applyTwoPlayerOutcome(winner = (o as? GameOutcome.Win)?.player)
                 }
                 store.save(progress)
+                // Cue: a theme was just unlocked by this round.
+                if (progress.unlockedThemes.size > beforeUnlocked) {
+                    GameSoundFx.playThemeUnlock()
+                }
+                // Cue: human lost to the computer (distinct from the win fanfare).
+                if (isVsAi() && humanWon == false) {
+                    GameSoundFx.playLoss()
+                }
             }
         }
     }
@@ -310,7 +330,7 @@ class GameViewModel(
                 recordMove(r, c, ai)
                 persistGameSnapshot()
                 if (wasInProgress && game.outcome() == GameOutcome.InProgress) {
-                    GameSoundFx.playMoveTap()
+                    GameSoundFx.playAiMove()
                 }
                 maybeRecordOutcome()
                 if (game.outcome() is GameOutcome.Win) {

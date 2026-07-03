@@ -57,6 +57,7 @@
     <string name="game_stats_best">best</string>
     <string name="game_sound_on">Sound on</string>
     <string name="game_sound_off">Sound off</string>
+    <string name="game_sound_volume">Volume</string>
 
     <string name="game_theme_unlock_intro">Unlock themes in vs Computer:</string>
     <string name="game_theme_unlock_details">Aurora — 1st win · Grove — 5 wins · Ember — streak 3 · Ocean — 10 wins</string>

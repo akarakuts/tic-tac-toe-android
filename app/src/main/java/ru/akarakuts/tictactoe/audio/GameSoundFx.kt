@@ -18,6 +18,10 @@ object GameSoundFx {
     @Volatile
     var soundEffectsEnabled: Boolean = true
 
+    /** Master volume multiplier in 0f..1f applied to every tone. */
+    @Volatile
+    var volume: Float = 1f
+
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val playMutex = Mutex()
 
@@ -71,6 +75,52 @@ object GameSoundFx {
         }
     }
 
+    /** Lower, softer tap for the computer's move — distinguishable from the human's. */
+    fun playAiMove() {
+        scope.launch(Dispatchers.IO) {
+            playMutex.lock()
+            try {
+                playToneSuspend(620.0, 0.05, 0.12f)
+            } finally {
+                playMutex.unlock()
+            }
+        }
+    }
+
+    /** Descending low tones signalling a loss / missed streak. */
+    fun playLoss() {
+        scope.launch {
+            playMutex.lock()
+            try {
+                playToneSuspend(392.0, 0.12, 0.18f)
+                delay(120)
+                playToneSuspend(293.66, 0.16, 0.18f)
+                delay(160)
+                playToneSuspend(196.0, 0.22, 0.2f)
+            } finally {
+                playMutex.unlock()
+            }
+        }
+    }
+
+    /** Rising arpeggio played when a board theme is unlocked. */
+    fun playThemeUnlock() {
+        scope.launch {
+            playMutex.lock()
+            try {
+                playToneSuspend(523.25, 0.08, 0.16f)
+                delay(80)
+                playToneSuspend(659.25, 0.08, 0.16f)
+                delay(80)
+                playToneSuspend(783.99, 0.08, 0.16f)
+                delay(80)
+                playToneSuspend(1046.5, 0.16, 0.2f)
+            } finally {
+                playMutex.unlock()
+            }
+        }
+    }
+
     private suspend fun playToneSuspend(frequency: Double, durationSec: Double, volume: Float) {
         withContext(Dispatchers.IO) {
             playToneBlocking(frequency, durationSec, volume)
@@ -80,6 +130,8 @@ object GameSoundFx {
     private suspend fun playToneBlocking(frequency: Double, durationSec: Double, volume: Float) {
         if (!soundEffectsEnabled) return
         if (durationSec <= 0) return
+        val effectiveVolume = (volume * this.volume).coerceIn(0f, 1f)
+        if (effectiveVolume <= 0f) return
         val frameCount = (sampleRate * durationSec).toInt().coerceAtLeast(1)
         val samples = ShortArray(frameCount)
         val twoPi = 2 * PI
@@ -93,7 +145,7 @@ object GameSoundFx {
             if (i > tailStart) {
                 env *= ((frameCount - i).toDouble() / release).coerceAtLeast(0.0)
             }
-            val v = sin(twoPi * frequency * t) * env * volume.toDouble()
+            val v = sin(twoPi * frequency * t) * env * effectiveVolume.toDouble()
             samples[i] = (v * Short.MAX_VALUE).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
         }
 
