@@ -102,6 +102,14 @@
     <string name="onboarding_slide4_title">Статистика и прочее</string>
     <string name="onboarding_slide4_body">Следите за победами, сериями и счётом двух игроков. Отменяйте ходы, получайте подсказки и выбирайте язык в Настройках.</string>
 
+    <string name="game_settings_series">Режим серии</string>
+    <string name="game_series_on">Серия вкл.</string>
+    <string name="game_series_off">Серия выкл.</string>
+    <string name="game_settings_series_target">Играть до</string>
+    <string name="game_series_status">Серия: ✕ %1$d — %2$d ○ · ничьи %3$d (до %4$d)</string>
+    <string name="game_series_won_crosses">Крестики выигрывают серию!</string>
+    <string name="game_series_won_noughts">Нолики выигрывают серию!</string>
+
     <string name="screen_scores_two_player_title">Два игрока</string>
     <string name="scores_label_crosses">Крестики (✕)</string>
     <string name="scores_label_noughts">Нолики (○)</string>

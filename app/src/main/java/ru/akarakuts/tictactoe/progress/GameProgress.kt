@@ -30,6 +30,16 @@ data class GameProgress(
     val appLanguage: String = "system",
     /** Whether the first-launch onboarding has been completed. */
     val onboardingShown: Boolean = false,
+    /** Whether best-of-N series mode is active (match continues until a side wins [seriesTarget] rounds). */
+    val seriesEnabled: Boolean = false,
+    /** Number of round wins needed to take the series (e.g. 2 for best-of-3, 3 for best-of-5). */
+    val seriesTarget: Int = 2,
+    /** Crosses' wins in the current active series. */
+    val seriesP1Wins: Int = 0,
+    /** Noughts' wins in the current active series. */
+    val seriesP2Wins: Int = 0,
+    /** Draws in the current active series. */
+    val seriesDraws: Int = 0,
 ) {
     fun applyVsAIOutcome(humanWon: Boolean?): GameProgress {
         var wins = winsVsAI

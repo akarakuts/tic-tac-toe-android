@@ -45,10 +45,15 @@ class ProgressJsonTest {
             appLanguage = "ru",
             onboardingShown = true,
             soundVolume = 0.6f,
+            seriesEnabled = true,
+            seriesTarget = 3,
+            seriesP1Wins = 2,
+            seriesP2Wins = 1,
+            seriesDraws = 0,
         )
         val decoded = ProgressJson.decode(ProgressJson.encode(original))
         assertEquals(original, decoded)
-        assertEquals(6, ProgressJson.SCHEMA_VERSION)
+        assertEquals(7, ProgressJson.SCHEMA_VERSION)
     }
 
     @Test
@@ -69,5 +74,7 @@ class ProgressJsonTest {
         assertEquals("system", decoded.appLanguage)
         assertEquals(false, decoded.onboardingShown)
         assertEquals(1f, decoded.soundVolume)
+        assertEquals(false, decoded.seriesEnabled)
+        assertEquals(2, decoded.seriesTarget)
     }
 }

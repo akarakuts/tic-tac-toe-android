@@ -102,6 +102,14 @@
     <string name="onboarding_slide4_title">Stats &amp; more</string>
     <string name="onboarding_slide4_body">Track your wins, streaks, and two-player scores. Take back moves, get hints, and choose your language in Settings.</string>
 
+    <string name="game_settings_series">Series mode</string>
+    <string name="game_series_on">Series on</string>
+    <string name="game_series_off">Series off</string>
+    <string name="game_settings_series_target">First to win</string>
+    <string name="game_series_status">Series: ✕ %1$d — %2$d ○ · draws %3$d (first to %4$d)</string>
+    <string name="game_series_won_crosses">Crosses win the series!</string>
+    <string name="game_series_won_noughts">Noughts win the series!</string>
+
     <string name="screen_scores_two_player_title">Two players</string>
     <string name="scores_label_crosses">Crosses (✕)</string>
     <string name="scores_label_noughts">Noughts (○)</string>

@@ -329,3 +329,38 @@ fun ModeAndAiSection(vm: GameViewModel, palette: BoardPalette) {
         )
     }
 }
+
+/** Best-of-N series toggle and target selector. */
+@Composable
+fun SeriesSection(vm: GameViewModel, palette: BoardPalette) {
+    SectionCaption(stringResource(R.string.game_settings_series), palette)
+    HudPill(
+        text = if (vm.progress.seriesEnabled) stringResource(R.string.game_series_on)
+        else stringResource(R.string.game_series_off),
+        selected = vm.progress.seriesEnabled,
+        enabled = true,
+        palette = palette,
+        onClick = { vm.applySeriesEnabled(!vm.progress.seriesEnabled) },
+        modifier = Modifier.fillMaxWidth(),
+    )
+    if (vm.progress.seriesEnabled) {
+        SectionCaption(stringResource(R.string.game_settings_series_target), palette)
+        // Target wins → underlying best-of. 2=best-of-3, 3=best-of-5, 4=best-of-7, 6=best-of-11.
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            listOf(2, 3, 4, 6).forEach { target ->
+                HudPill(
+                    text = target.toString(),
+                    selected = vm.progress.seriesTarget == target,
+                    enabled = true,
+                    palette = palette,
+                    onClick = { vm.applySeriesTarget(target) },
+                    modifier = Modifier.weight(1f),
+                    compact = true,
+                )
+            }
+        }
+    }
+}

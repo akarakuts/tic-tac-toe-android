@@ -71,6 +71,29 @@ fun PlayScreen(vm: GameViewModel, palette: BoardPalette) {
                     .fillMaxWidth()
                     .padding(bottom = 8.dp),
             )
+            if (vm.progress.seriesEnabled) {
+                val seriesText = vm.seriesWinner?.let { winner ->
+                    if (winner == ru.akarakuts.tictactoe.game.Player.X)
+                        stringResource(R.string.game_series_won_crosses)
+                    else
+                        stringResource(R.string.game_series_won_noughts)
+                } ?: stringResource(
+                    R.string.game_series_status,
+                    vm.progress.seriesP1Wins,
+                    vm.progress.seriesP2Wins,
+                    vm.progress.seriesDraws,
+                    vm.progress.seriesTarget,
+                )
+                Text(
+                    text = seriesText,
+                    color = palette.captionText,
+                    fontSize = 13.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 6.dp),
+                )
+            }
         }
 
         val boardBlock = @Composable {

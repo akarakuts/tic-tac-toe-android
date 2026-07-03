@@ -161,6 +161,7 @@ class GameViewModel(
         game = game.reset()
         moveHistory = emptyList()
         hintMove = null
+        seriesWinner = null
         persistGameSnapshot()
         maybeKickAi()
     }
@@ -294,8 +295,61 @@ class GameViewModel(
                 if (isVsAi() && humanWon == false) {
                     GameSoundFx.playLoss()
                 }
+                // Best-of-N series accounting.
+                if (progress.seriesEnabled) {
+                    applySeriesRound((o as? GameOutcome.Win)?.player)
+                }
             }
         }
+    }
+
+    /**
+     * Records one round into the active series. When a side reaches [GameProgress.seriesTarget],
+     * the series is decided: [seriesWinner] is set and the in-progress counters reset for the next
+     * match.
+     */
+    private fun applySeriesRound(winner: ru.akarakuts.tictactoe.game.Player?) {
+        val p1 = if (winner == Player.X) progress.seriesP1Wins + 1 else progress.seriesP1Wins
+        val p2 = if (winner == Player.O) progress.seriesP2Wins + 1 else progress.seriesP2Wins
+        val draws = if (winner == null) progress.seriesDraws + 1 else progress.seriesDraws
+        val target = progress.seriesTarget
+        val decided = when {
+            p1 >= target -> Player.X
+            p2 >= target -> Player.O
+            else -> null
+        }
+        progress = if (decided != null) {
+            progress.copy(seriesP1Wins = 0, seriesP2Wins = 0, seriesDraws = 0)
+        } else {
+            progress.copy(seriesP1Wins = p1, seriesP2Wins = p2, seriesDraws = draws)
+        }
+        seriesWinner = decided
+        store.save(progress)
+    }
+
+    /** Winner of the just-completed series, if any; cleared when a new round begins. */
+    var seriesWinner by mutableStateOf<ru.akarakuts.tictactoe.game.Player?>(null)
+        private set
+
+    fun applySeriesEnabled(enabled: Boolean) {
+        if (progress.seriesEnabled == enabled) return
+        progress = progress.copy(
+            seriesEnabled = enabled,
+            seriesP1Wins = 0, seriesP2Wins = 0, seriesDraws = 0,
+        )
+        seriesWinner = null
+        store.save(progress)
+    }
+
+    fun applySeriesTarget(target: Int) {
+        val clamped = target.coerceIn(2, 11)
+        if (progress.seriesTarget == clamped) return
+        progress = progress.copy(
+            seriesTarget = clamped,
+            seriesP1Wins = 0, seriesP2Wins = 0, seriesDraws = 0,
+        )
+        seriesWinner = null
+        store.save(progress)
     }
 
     private fun isVsAi() = opponentMode == OpponentMode.HumanComputer

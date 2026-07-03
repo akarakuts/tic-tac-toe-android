@@ -8,9 +8,9 @@ import ru.akarakuts.tictactoe.game.Player
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** JSON codec for [GameProgress] with schema version and migrations (v1, v2 → v3 → v4 → v5 → v6). */
+/** JSON codec for [GameProgress] with schema version and migrations (v1..v7). */
 internal object ProgressJson {
-    const val SCHEMA_VERSION = 6
+    const val SCHEMA_VERSION = 7
 
     fun encode(p: GameProgress): String {
         val ja = JSONArray()
@@ -37,6 +37,11 @@ internal object ProgressJson {
             put("humanDraws", p.humanDraws)
             put("appLanguage", p.appLanguage)
             put("onboardingShown", p.onboardingShown)
+            put("seriesEnabled", p.seriesEnabled)
+            put("seriesTarget", p.seriesTarget)
+            put("seriesP1Wins", p.seriesP1Wins)
+            put("seriesP2Wins", p.seriesP2Wins)
+            put("seriesDraws", p.seriesDraws)
         }.toString()
     }
 
@@ -86,6 +91,11 @@ internal object ProgressJson {
             humanDraws = o.optInt("humanDraws"),
             appLanguage = o.optString("appLanguage", "system"),
             onboardingShown = o.optBoolean("onboardingShown", false),
+            seriesEnabled = o.optBoolean("seriesEnabled", false),
+            seriesTarget = o.optInt("seriesTarget", 2).coerceIn(2, 11),
+            seriesP1Wins = o.optInt("seriesP1Wins"),
+            seriesP2Wins = o.optInt("seriesP2Wins"),
+            seriesDraws = o.optInt("seriesDraws"),
         )
     }
 }

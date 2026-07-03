@@ -121,6 +121,8 @@ fun SettingsScreen(vm: GameViewModel, palette: BoardPalette) {
 
                     ModeAndAiSection(vm, palette)
 
+                    SeriesSection(vm, palette)
+
                     SectionCaption(stringResource(R.string.game_settings_win_line), palette)
                     WinLenGrid(vm, palette)
 
