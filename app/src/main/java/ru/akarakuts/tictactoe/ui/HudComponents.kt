@@ -200,6 +200,7 @@ fun themeTitle(style: BoardVisualStyle): String = when (style) {
     BoardVisualStyle.Aurora -> stringResource(R.string.game_theme_aurora)
     BoardVisualStyle.Grove -> stringResource(R.string.game_theme_grove)
     BoardVisualStyle.Ember -> stringResource(R.string.game_theme_ember)
+    BoardVisualStyle.Ocean -> stringResource(R.string.game_theme_ocean)
 }
 
 @Composable

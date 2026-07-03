@@ -26,6 +26,20 @@ class GameProgressTest {
     }
 
     @Test
+    fun applyVsAIOutcome_tenWins_unlocksOcean() {
+        val base = GameProgress(
+            winsVsAI = 9,
+            unlockedThemes = setOf(
+                BoardVisualStyle.Classic, BoardVisualStyle.Aurora,
+                BoardVisualStyle.Grove, BoardVisualStyle.Ember,
+            ),
+        )
+        val next = base.applyVsAIOutcome(humanWon = true)
+        assertEquals(10, next.winsVsAI)
+        assertTrue(BoardVisualStyle.Ocean in next.unlockedThemes)
+    }
+
+    @Test
     fun applyVsAIOutcome_loss_resetsStreak() {
         val base = GameProgress(currentWinStreak = 2, winsVsAI = 2)
         val next = base.applyVsAIOutcome(humanWon = false)

@@ -43,4 +43,5 @@ enum class BoardVisualStyle(val raw: String) {
     Aurora("aurora"),
     Grove("grove"),
     Ember("ember"),
+    Ocean("ocean"),
 }

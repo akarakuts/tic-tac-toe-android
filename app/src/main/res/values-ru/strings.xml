@@ -49,6 +49,7 @@
     <string name="game_theme_aurora">Аврора</string>
     <string name="game_theme_grove">Роща</string>
     <string name="game_theme_ember">Закат</string>
+    <string name="game_theme_ocean">Океан</string>
     <string name="game_theme_locked_badge">\u0020🔒</string>
 
     <string name="game_stats_vs_ai">Против ИИ</string>
@@ -58,7 +59,7 @@
     <string name="game_sound_off">Звук выкл.</string>
 
     <string name="game_theme_unlock_intro">Темы открываются в режиме «Против компьютера»:</string>
-    <string name="game_theme_unlock_details">Аврора — 1-я победа · Роща — 5 побед · Закат — серия 3</string>
+    <string name="game_theme_unlock_details">Аврора — 1-я победа · Роща — 5 побед · Закат — серия 3 · Океан — 10 побед</string>
 
     <string name="screen_about_title">О приложении</string>
     <string name="screen_about_subtitle">Описание, поддержка и конфиденциальность.</string>

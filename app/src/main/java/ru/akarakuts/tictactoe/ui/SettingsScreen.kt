@@ -96,6 +96,12 @@ fun SettingsScreen(vm: GameViewModel, palette: BoardPalette) {
                     ) {
                         ThemeChipPair(vm, palette, Modifier.weight(1f), BoardVisualStyle.Grove, BoardVisualStyle.Ember)
                     }
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        ThemeChip(vm, palette, Modifier.fillMaxWidth(), BoardVisualStyle.Ocean)
+                    }
 
                     ModeAndAiSection(vm, palette)
 

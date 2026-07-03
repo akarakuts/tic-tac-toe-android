@@ -40,6 +40,7 @@ data class GameProgress(
                 if (wins >= 1) unlocked += BoardVisualStyle.Aurora
                 if (wins >= 5) unlocked += BoardVisualStyle.Grove
                 if (best >= 3) unlocked += BoardVisualStyle.Ember
+                if (wins >= 10) unlocked += BoardVisualStyle.Ocean
             }
             false -> {
                 losses++

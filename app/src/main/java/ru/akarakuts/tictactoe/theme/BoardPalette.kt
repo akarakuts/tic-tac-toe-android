@@ -37,6 +37,7 @@ fun boardPalette(style: BoardVisualStyle, darkMode: Boolean, accent: Color): Boa
         BoardVisualStyle.Aurora -> if (darkMode) auroraDark(accent) else auroraLight(accent)
         BoardVisualStyle.Grove -> if (darkMode) groveDark(accent) else groveLight(accent)
         BoardVisualStyle.Ember -> if (darkMode) emberDark(accent) else emberLight(accent)
+        BoardVisualStyle.Ocean -> if (darkMode) oceanDark(accent) else oceanLight(accent)
     }
 
 private fun gray(w: Float, a: Float = 1f) = Color(w, w, w, a)
@@ -268,4 +269,58 @@ private fun emberLight(accent: Color): BoardPalette = BoardPalette(
     newGameStroke = accent.copy(alpha = 0.56f),
     newGameLabel = hueCalibrated(0.05f, 0.4f, 0.14f),
     winLine = hueCalibrated(0.08f, 0.85f, 0.55f),
+)
+
+private fun oceanDark(accent: Color): BoardPalette = BoardPalette(
+    sceneBackground = hueCalibrated(0.56f, 0.32f, 0.08f),
+    panelFill = hueCalibrated(0.55f, 0.12f, 1f, 0.06f),
+    panelStroke = gray(1f, 0.11f),
+    boardShadow = hueCalibrated(0.58f, 0.6f, 0.05f, 0.55f),
+    boardPlaqueFill = hueCalibrated(0.57f, 0.24f, 0.13f),
+    boardPlaqueStroke = accent.copy(alpha = 0.44f),
+    cellEven = hueCalibrated(0.55f, 0.3f, 0.22f),
+    cellOdd = hueCalibrated(0.58f, 0.24f, 0.17f),
+    gridLine = hueCalibrated(0.54f, 0.06f, 1f, 0.13f),
+    gridOuter = hueCalibrated(0.56f, 0.1f, 1f, 0.3f),
+    crossMark = hueCalibrated(0.5f, 0.7f, 1f),
+    noughtMark = hueCalibrated(0.42f, 0.5f, 0.96f),
+    statusText = hueCalibrated(0.52f, 0.06f, 0.98f),
+    captionText = hueCalibrated(0.54f, 0.08f, 0.64f),
+    pillFill = gray(1f, 0.055f),
+    pillFillSelected = accent.copy(alpha = 0.27f),
+    pillStroke = gray(1f, 0.15f),
+    pillStrokeSelected = accent,
+    pillText = gray(0.93f),
+    pillTextDisabled = gray(0.36f),
+    newGameFill = accent.copy(alpha = 0.35f),
+    newGameStroke = accent.copy(alpha = 0.73f),
+    newGameLabel = gray(0.98f),
+    winLine = hueCalibrated(0.5f, 0.85f, 1f),
+)
+
+private fun oceanLight(accent: Color): BoardPalette = BoardPalette(
+    sceneBackground = hueCalibrated(0.55f, 0.08f, 0.97f),
+    panelFill = gray(1f, 0.8f),
+    panelStroke = hueCalibrated(0.54f, 0.14f, 0.82f, 0.38f),
+    boardShadow = hueCalibrated(0.56f, 0.22f, 0.62f, 0.2f),
+    boardPlaqueFill = hueCalibrated(0.53f, 0.04f, 1f),
+    boardPlaqueStroke = accent.copy(alpha = 0.4f),
+    cellEven = hueCalibrated(0.55f, 0.1f, 0.97f),
+    cellOdd = hueCalibrated(0.52f, 0.07f, 0.94f),
+    gridLine = hueCalibrated(0.54f, 0.13f, 0.72f, 0.5f),
+    gridOuter = hueCalibrated(0.56f, 0.18f, 0.58f, 0.62f),
+    crossMark = hueCalibrated(0.58f, 0.62f, 0.52f),
+    noughtMark = hueCalibrated(0.46f, 0.5f, 0.46f),
+    statusText = hueCalibrated(0.56f, 0.4f, 0.22f),
+    captionText = hueCalibrated(0.54f, 0.1f, 0.42f),
+    pillFill = gray(1f, 0.92f),
+    pillFillSelected = accent.copy(alpha = 0.22f),
+    pillStroke = hueCalibrated(0.54f, 0.1f, 0.78f, 0.68f),
+    pillStrokeSelected = accent,
+    pillText = hueCalibrated(0.56f, 0.34f, 0.18f),
+    pillTextDisabled = hueCalibrated(0.54f, 0.04f, 0.62f),
+    newGameFill = accent.copy(alpha = 0.27f),
+    newGameStroke = accent.copy(alpha = 0.57f),
+    newGameLabel = hueCalibrated(0.56f, 0.4f, 0.15f),
+    winLine = hueCalibrated(0.52f, 0.8f, 0.6f),
 )

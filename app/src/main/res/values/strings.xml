@@ -49,6 +49,7 @@
     <string name="game_theme_aurora">Aurora</string>
     <string name="game_theme_grove">Grove</string>
     <string name="game_theme_ember">Ember</string>
+    <string name="game_theme_ocean">Ocean</string>
     <string name="game_theme_locked_badge">\u0020🔒</string>
 
     <string name="game_stats_vs_ai">vs AI</string>
@@ -58,7 +59,7 @@
     <string name="game_sound_off">Sound off</string>
 
     <string name="game_theme_unlock_intro">Unlock themes in vs Computer:</string>
-    <string name="game_theme_unlock_details">Aurora — 1st win · Grove — 5 wins · Ember — streak 3</string>
+    <string name="game_theme_unlock_details">Aurora — 1st win · Grove — 5 wins · Ember — streak 3 · Ocean — 10 wins</string>
 
     <string name="screen_about_title">About</string>
     <string name="screen_about_subtitle">App info, support, and privacy.</string>
