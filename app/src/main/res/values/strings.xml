@@ -75,4 +75,16 @@
     <string name="a11y_cell_cross">cross</string>
     <string name="a11y_cell_nought">nought</string>
     <string name="a11y_cell_position">Row %1$d, column %2$d, %3$s</string>
+
+    <string name="game_button_undo">Undo</string>
+    <string name="game_button_hint">Hint</string>
+    <string name="game_settings_hints">Show move hints</string>
+    <string name="game_hints_on">Hints on</string>
+    <string name="game_hints_off">Hints off</string>
+
+    <string name="screen_scores_two_player_title">Two players</string>
+    <string name="scores_label_crosses">Crosses (✕)</string>
+    <string name="scores_label_noughts">Noughts (○)</string>
+    <string name="scores_label_draws_tp">Draws</string>
+    <string name="scores_two_player_record">Crosses %1$d — %2$d Noughts · draws %3$d</string>
 </resources>

@@ -79,6 +79,8 @@ fun PlayScreen(vm: GameViewModel, palette: BoardPalette) {
                 palette = palette,
                 humanBlocked = vm.opponentMode == OpponentMode.HumanComputer &&
                     vm.game.currentPlayer != vm.humanPlayer,
+                lastMove = vm.lastMove,
+                hintMove = vm.hintMove,
                 onCell = { r, c ->
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     vm.cellTap(r, c)
@@ -87,15 +89,43 @@ fun PlayScreen(vm: GameViewModel, palette: BoardPalette) {
             )
         }
 
-        val newGameBlock = @Composable {
-            HudPrimaryButton(
-                text = stringResource(R.string.game_button_new_game),
-                palette = palette,
-                onClick = { vm.newGame() },
+        val actionsBlock = @Composable {
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .widthIn(max = 420.dp),
-            )
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                HudPrimaryButton(
+                    text = stringResource(R.string.game_button_undo),
+                    palette = palette,
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        vm.undo()
+                    },
+                    modifier = Modifier.weight(1f),
+                )
+                HudPrimaryButton(
+                    text = stringResource(R.string.game_button_new_game),
+                    palette = palette,
+                    onClick = { vm.newGame() },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            if (vm.progress.hintsEnabled) {
+                Spacer(modifier = Modifier.height(10.dp))
+                HudPrimaryButton(
+                    text = stringResource(R.string.game_button_hint),
+                    palette = palette,
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        vm.hint()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .widthIn(max = 420.dp),
+                )
+            }
         }
 
         if (isWide) {
@@ -122,7 +152,7 @@ fun PlayScreen(vm: GameViewModel, palette: BoardPalette) {
                         .weight(0.55f)
                         .padding(start = 16.dp),
                 ) {
-                    newGameBlock()
+                    actionsBlock()
                 }
             }
         } else {
@@ -137,8 +167,12 @@ fun PlayScreen(vm: GameViewModel, palette: BoardPalette) {
                 statusBlock()
                 boardBlock()
                 Spacer(modifier = Modifier.height(16.dp))
-                newGameBlock()
+                actionsBlock()
             }
+        }
+
+        if (vm.game.outcome() is ru.akarakuts.tictactoe.game.GameOutcome.Win) {
+            ConfettiOverlay(palette = palette)
         }
     }
 }

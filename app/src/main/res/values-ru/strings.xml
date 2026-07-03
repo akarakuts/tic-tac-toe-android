@@ -75,4 +75,16 @@
     <string name="a11y_cell_cross">крестик</string>
     <string name="a11y_cell_nought">нолик</string>
     <string name="a11y_cell_position">Ряд %1$d, столбец %2$d, %3$s</string>
+
+    <string name="game_button_undo">Отменить</string>
+    <string name="game_button_hint">Подсказка</string>
+    <string name="game_settings_hints">Показывать подсказки хода</string>
+    <string name="game_hints_on">Подсказки вкл.</string>
+    <string name="game_hints_off">Подсказки выкл.</string>
+
+    <string name="screen_scores_two_player_title">Два игрока</string>
+    <string name="scores_label_crosses">Крестики (✕)</string>
+    <string name="scores_label_noughts">Нолики (○)</string>
+    <string name="scores_label_draws_tp">Ничьи</string>
+    <string name="scores_two_player_record">Крестики %1$d — %2$d Нолики · ничьи %3$d</string>
 </resources>

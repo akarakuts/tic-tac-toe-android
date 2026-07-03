@@ -72,6 +72,17 @@ fun SettingsScreen(vm: GameViewModel, palette: BoardPalette) {
                         modifier = Modifier.fillMaxWidth(),
                     )
 
+                    SectionCaption(stringResource(R.string.game_settings_hints), palette)
+                    HudPill(
+                        text = if (vm.progress.hintsEnabled) stringResource(R.string.game_hints_on)
+                        else stringResource(R.string.game_hints_off),
+                        selected = vm.progress.hintsEnabled,
+                        enabled = true,
+                        palette = palette,
+                        onClick = { vm.applyHintsEnabled(!vm.progress.hintsEnabled) },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
                     SectionCaption(stringResource(R.string.game_settings_theme), palette)
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),

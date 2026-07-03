@@ -14,6 +14,7 @@ import ru.akarakuts.tictactoe.game.BoardVisualStyle
 import ru.akarakuts.tictactoe.game.Cell
 import ru.akarakuts.tictactoe.game.GameModel
 import ru.akarakuts.tictactoe.game.GameOutcome
+import ru.akarakuts.tictactoe.game.Move
 import ru.akarakuts.tictactoe.game.OpponentMode
 import ru.akarakuts.tictactoe.game.Player
 import ru.akarakuts.tictactoe.game.TicTacToeAI
@@ -56,6 +57,17 @@ class GameViewModel(
     var aiThinking by mutableStateOf(false)
         private set
 
+    /** Ordered moves of the current round — drives undo, last-move highlight, replay. */
+    var moveHistory by mutableStateOf<List<Move>>(emptyList())
+        private set
+
+    /** Last placed mark, for the board highlight ring. */
+    val lastMove: Move? get() = moveHistory.lastOrNull()
+
+    /** Cell briefly highlighted by the hint feature; cleared on the next move. */
+    var hintMove by mutableStateOf<Move?>(null)
+        private set
+
     private var roundOutcomeRecorded = false
     private var inputEpoch = 0
     private var aiJob: Job? = null
@@ -80,6 +92,8 @@ class GameViewModel(
         roundOutcomeRecorded = false
         if (winLength > boardSize) winLength = boardSize
         game = GameModel.new(boardSize, winLength)
+        moveHistory = emptyList()
+        hintMove = null
         syncProgressMatchSettings()
         persistGameSnapshot()
         maybeKickAi()
@@ -133,6 +147,8 @@ class GameViewModel(
         bumpEpochAndCancelAi()
         roundOutcomeRecorded = false
         game = game.reset()
+        moveHistory = emptyList()
+        hintMove = null
         persistGameSnapshot()
         maybeKickAi()
     }
@@ -141,6 +157,7 @@ class GameViewModel(
         if (game.outcome() != GameOutcome.InProgress) return
         if (isVsAi() && game.currentPlayer != humanPlayer) return
 
+        val mover = game.currentPlayer
         val before = game.outcome()
         val next = game.play(row, col)
         if (next == null) {
@@ -148,6 +165,7 @@ class GameViewModel(
             return
         }
         game = next
+        recordMove(row, col, mover)
         persistGameSnapshot()
         if (before == GameOutcome.InProgress && game.outcome() == GameOutcome.InProgress) {
             GameSoundFx.playMoveTap()
@@ -155,26 +173,84 @@ class GameViewModel(
         onBoardUpdatedAfterHumanMove()
     }
 
+    private fun recordMove(row: Int, col: Int, player: Player) {
+        moveHistory = moveHistory + Move(row, col, player)
+        hintMove = null
+    }
+
     private fun onBoardUpdatedAfterHumanMove() {
-        maybeRecordVsAIOutcome()
+        maybeRecordOutcome()
         if (game.outcome() is GameOutcome.Win) {
             GameSoundFx.playWinFanfare()
         }
         maybeKickAi()
     }
 
-    private fun maybeRecordVsAIOutcome() {
-        if (!isVsAi() || roundOutcomeRecorded) return
+    /** Replays [moves] from an empty board to reconstruct state — used by undo and restore. */
+    private fun replayHistory(moves: List<Move>): GameModel {
+        var g = GameModel.new(boardSize, winLength)
+        for (m in moves) {
+            g = g.play(m.row, m.col) ?: break
+        }
+        return g
+    }
+
+    /** True when a move can be taken back: history present and round still in progress. */
+    fun canUndo(): Boolean = moveHistory.isNotEmpty() && game.outcome() == GameOutcome.InProgress
+
+    /**
+     * Takes back the last move. In vs-AI mode the AI's reply is undone together with the
+     * human's move so it is the human's turn again. Stats recorded for the round are discarded
+     * (the round is back in progress).
+     */
+    fun undo() {
+        if (moveHistory.isEmpty()) return
+        bumpEpochAndCancelAi()
+        roundOutcomeRecorded = false
+        val stepsToRevert = if (isVsAi() && moveHistory.size >= 2 &&
+            moveHistory.last().player == aiPlayer) 2 else 1
+        val trimmed = moveHistory.dropLast(stepsToRevert)
+        moveHistory = trimmed
+        hintMove = null
+        game = replayHistory(trimmed)
+        persistGameSnapshot()
+    }
+
+    /** Briefly highlights the AI's recommended move for the side to play (when hints are on). */
+    fun hint() {
+        if (!progress.hintsEnabled) return
+        if (game.outcome() != GameOutcome.InProgress) return
+        if (isVsAi() && game.currentPlayer != humanPlayer) return
+        val mover = if (isVsAi()) humanPlayer else game.currentPlayer
+        val snapshot = game
+        val difficulty = progress.aiDifficulty
+        viewModelScope.launch {
+            val move = withContext(kotlinx.coroutines.Dispatchers.Default) {
+                TicTacToeAI.bestMove(mover, snapshot, difficulty)
+            } ?: return@launch
+            hintMove = Move(move.first, move.second, mover)
+        }
+    }
+
+    fun applyHintsEnabled(enabled: Boolean) {
+        if (progress.hintsEnabled == enabled) return
+        progress = progress.copy(hintsEnabled = enabled)
+        store.save(progress)
+        if (!enabled) hintMove = null
+    }
+
+    private fun maybeRecordOutcome() {
+        if (roundOutcomeRecorded) return
         when (val o = game.outcome()) {
             GameOutcome.InProgress -> return
-            is GameOutcome.Win -> {
+            is GameOutcome.Win, GameOutcome.Draw -> {
                 roundOutcomeRecorded = true
-                progress = progress.applyVsAIOutcome(humanWon = o.player == humanPlayer)
-                store.save(progress)
-            }
-            GameOutcome.Draw -> {
-                roundOutcomeRecorded = true
-                progress = progress.applyVsAIOutcome(humanWon = null)
+                progress = when (opponentMode) {
+                    OpponentMode.HumanComputer ->
+                        progress.applyVsAIOutcome(humanWon = (o as? GameOutcome.Win)?.player == humanPlayer)
+                    OpponentMode.HumanHuman ->
+                        progress.applyTwoPlayerOutcome(winner = (o as? GameOutcome.Win)?.player)
+                }
                 store.save(progress)
             }
         }
@@ -209,11 +285,12 @@ class GameViewModel(
                 val next = game.play(r, c) ?: return@launch
                 val wasInProgress = game.outcome() == GameOutcome.InProgress
                 game = next
+                recordMove(r, c, ai)
                 persistGameSnapshot()
                 if (wasInProgress && game.outcome() == GameOutcome.InProgress) {
                     GameSoundFx.playMoveTap()
                 }
-                maybeRecordVsAIOutcome()
+                maybeRecordOutcome()
                 if (game.outcome() is GameOutcome.Win) {
                     GameSoundFx.playWinFanfare()
                 }

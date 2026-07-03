@@ -35,6 +35,9 @@ enum class AIDifficulty {
     Hard,
 }
 
+/** A single placed mark: grid coordinates plus the player who moved. */
+data class Move(val row: Int, val col: Int, val player: Player)
+
 enum class BoardVisualStyle(val raw: String) {
     Classic("classic"),
     Aurora("aurora"),

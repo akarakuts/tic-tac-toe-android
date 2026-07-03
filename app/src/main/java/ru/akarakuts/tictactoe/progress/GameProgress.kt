@@ -5,7 +5,7 @@ import ru.akarakuts.tictactoe.game.BoardVisualStyle
 import ru.akarakuts.tictactoe.game.OpponentMode
 import ru.akarakuts.tictactoe.game.Player
 
-/** Persisted vs-AI stats, match settings, streaks, theme unlocks, difficulty, and sound toggle. */
+/** Persisted vs-AI and two-player stats, match settings, streaks, theme unlocks, difficulty, hints, and sound toggle. */
 data class GameProgress(
     val winsVsAI: Int = 0,
     val lossesVsAI: Int = 0,
@@ -20,6 +20,10 @@ data class GameProgress(
     val winLength: Int = 3,
     val opponentMode: OpponentMode = OpponentMode.HumanComputer,
     val humanPlayer: Player = Player.X,
+    val hintsEnabled: Boolean = false,
+    val p1Wins: Int = 0,
+    val p2Wins: Int = 0,
+    val humanDraws: Int = 0,
 ) {
     fun applyVsAIOutcome(humanWon: Boolean?): GameProgress {
         var wins = winsVsAI
@@ -57,5 +61,12 @@ data class GameProgress(
             unlockedThemes = unlocked,
             selectedTheme = theme,
         )
+    }
+
+    /** Records a finished two-player (local) round. X is player 1, O is player 2. */
+    fun applyTwoPlayerOutcome(winner: Player?): GameProgress = when (winner) {
+        Player.X -> copy(p1Wins = p1Wins + 1)
+        Player.O -> copy(p2Wins = p2Wins + 1)
+        null -> copy(humanDraws = humanDraws + 1)
     }
 }

@@ -122,6 +122,65 @@ fun ScoresScreen(vm: GameViewModel, palette: BoardPalette) {
                 }
             }
 
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(22.dp),
+                color = palette.panelFill,
+                border = BorderStroke(1.dp, palette.panelStroke),
+            ) {
+                Column(
+                    Modifier.padding(horizontal = 16.dp, vertical = 18.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(
+                        text = stringResource(R.string.screen_scores_two_player_title),
+                        color = palette.statusText,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = stringResource(R.string.scores_label_crosses),
+                                color = palette.captionText,
+                                fontSize = 12.sp,
+                            )
+                            StatsGlyph("✕", vm.progress.p1Wins, palette.crossMark)
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = stringResource(R.string.scores_label_noughts),
+                                color = palette.captionText,
+                                fontSize = 12.sp,
+                            )
+                            StatsGlyph("○", vm.progress.p2Wins, palette.noughtMark)
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = stringResource(R.string.scores_label_draws_tp),
+                                color = palette.captionText,
+                                fontSize = 12.sp,
+                            )
+                            StatsGlyph("=", vm.progress.humanDraws, palette.statusText.copy(alpha = palette.statusText.alpha * 0.82f))
+                        }
+                    }
+                    Text(
+                        text = stringResource(R.string.scores_two_player_record,
+                            vm.progress.p1Wins,
+                            vm.progress.p2Wins,
+                            vm.progress.humanDraws),
+                        color = palette.captionText,
+                        fontSize = 13.sp,
+                        modifier = Modifier.padding(top = 16.dp),
+                    )
+                }
+            }
+
             ThemeLegendCard(palette = palette, modifier = Modifier.padding(bottom = 24.dp))
         }
     }
