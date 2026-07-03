@@ -39,9 +39,10 @@ class GameViewModel(
     private val savedStateHandle: SavedStateHandle,
 ) : AndroidViewModel(application) {
 
-    private val store = GameProgressStore(application)
+    private val store = GameProgressStore(application.applicationContext)
 
-    private val _state = MutableStateFlow(GameState.initial(store.load()))
+    // Seeded with defaults; init loads the persisted progress asynchronously and swaps it in.
+    private val _state = MutableStateFlow(GameState.initial(GameProgress()))
     /** Single source of truth for the UI; screens collect this via `collectAsStateWithLifecycle()`. */
     val state: StateFlow<GameState> = _state.asStateFlow()
 
@@ -63,12 +64,25 @@ class GameViewModel(
     private var aiJob: Job? = null
 
     init {
-        val p = progress
-        GameSoundFx.soundEffectsEnabled = p.soundEnabled
-        GameSoundFx.volume = p.soundVolume
-        LocaleController.restore(p.appLanguage)
-        _state.update { it.copy(game = restoreGameOrNew()) }
-        maybeKickAi()
+        // DataStore reads are async; load the persisted progress off the main thread, then apply
+        // it to the state and kick off any pending AI move.
+        viewModelScope.launch {
+            val loaded = store.load()
+            GameSoundFx.soundEffectsEnabled = loaded.soundEnabled
+            GameSoundFx.volume = loaded.soundVolume
+            LocaleController.restore(loaded.appLanguage)
+            _state.update { it.copy(progress = loaded) }
+            _state.update {
+                it.copy(
+                    boardSize = loaded.boardSize,
+                    winLength = loaded.winLength,
+                    opponentMode = loaded.opponentMode,
+                    humanPlayer = loaded.humanPlayer,
+                    game = restoreGameOrNew(),
+                )
+            }
+            maybeKickAi()
+        }
     }
 
     private val aiPlayer: Player get() = humanPlayer.other
@@ -124,7 +138,7 @@ class GameViewModel(
 
     fun applyAiDifficulty(d: AIDifficulty) {
         if (!isVsAi() || progress.aiDifficulty == d) return
-        _state.update { it.copy(progress = progress.copy(aiDifficulty = d).also { store.save(it) }) }
+        updateProgress { it.copy(aiDifficulty = d) }
         applyBoardConfiguration()
     }
 
@@ -388,8 +402,17 @@ class GameViewModel(
     }
 
     /** Updates the persisted [GameProgress] inside the state atomically and saves it to the store. */
-    private inline fun updateProgress(transform: (GameProgress) -> GameProgress) {
-        _state.update { it.copy(progress = transform(it.progress).also { p -> store.save(p) }) }
+    private fun updateProgress(transform: (GameProgress) -> GameProgress) {
+        var saved: GameProgress? = null
+        _state.update { current ->
+            val next = transform(current.progress)
+            saved = next
+            current.copy(progress = next)
+        }
+        val toSave = saved
+        if (toSave != null) {
+            viewModelScope.launch { store.save(toSave) }
+        }
     }
 
     private fun persistGameSnapshot() {
