@@ -24,6 +24,8 @@ data class GameProgress(
     val p1Wins: Int = 0,
     val p2Wins: Int = 0,
     val humanDraws: Int = 0,
+    /** In-app language code: "system" (default), or a BCP-47 tag like "en"/"ru". */
+    val appLanguage: String = "system",
 ) {
     fun applyVsAIOutcome(humanWon: Boolean?): GameProgress {
         var wins = winsVsAI

@@ -83,6 +83,11 @@
     <string name="game_hints_on">Hints on</string>
     <string name="game_hints_off">Hints off</string>
 
+    <string name="game_settings_language">Language</string>
+    <string name="game_language_system">System</string>
+    <string name="game_language_english">English</string>
+    <string name="game_language_russian">Русский</string>
+
     <string name="screen_scores_two_player_title">Two players</string>
     <string name="scores_label_crosses">Crosses (✕)</string>
     <string name="scores_label_noughts">Noughts (○)</string>

@@ -113,7 +113,46 @@ fun SettingsScreen(vm: GameViewModel, palette: BoardPalette) {
                 }
             }
 
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(22.dp),
+                color = palette.panelFill,
+                border = BorderStroke(1.dp, palette.panelStroke),
+            ) {
+                Column(
+                    Modifier.padding(horizontal = 14.dp, vertical = 14.dp),
+                ) {
+                    SectionCaption(stringResource(R.string.game_settings_language), palette)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        val codes = LocaleController.options
+                        codes.forEach { code ->
+                            HudPill(
+                                text = languageLabel(code),
+                                selected = vm.progress.appLanguage == code,
+                                enabled = true,
+                                palette = palette,
+                                onClick = { vm.applyLanguage(code) },
+                                modifier = Modifier.weight(1f),
+                                compact = true,
+                            )
+                        }
+                    }
+                }
+            }
+
             ThemeLegendCard(palette = palette, modifier = Modifier.padding(bottom = 24.dp))
         }
     }
+}
+
+/** Each language is labelled by its own endonym so it is recognizable in any current locale. */
+@Composable
+private fun languageLabel(code: String): String = when (code) {
+    "system" -> stringResource(R.string.game_language_system)
+    "en" -> stringResource(R.string.game_language_english)
+    "ru" -> stringResource(R.string.game_language_russian)
+    else -> code
 }

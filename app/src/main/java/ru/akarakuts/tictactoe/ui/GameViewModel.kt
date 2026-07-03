@@ -74,6 +74,7 @@ class GameViewModel(
 
     init {
         GameSoundFx.soundEffectsEnabled = progress.soundEnabled
+        LocaleController.restore(progress.appLanguage)
         game = restoreGameOrNew()
         maybeKickAi()
     }
@@ -237,6 +238,14 @@ class GameViewModel(
         progress = progress.copy(hintsEnabled = enabled)
         store.save(progress)
         if (!enabled) hintMove = null
+    }
+
+    /** Applies an in-app language choice; AppCompat recreates the Activity to pick it up. */
+    fun applyLanguage(code: String) {
+        if (progress.appLanguage == code) return
+        progress = progress.copy(appLanguage = code)
+        store.save(progress)
+        LocaleController.apply(code)
     }
 
     private fun maybeRecordOutcome() {

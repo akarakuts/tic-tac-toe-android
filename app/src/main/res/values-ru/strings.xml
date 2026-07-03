@@ -83,6 +83,11 @@
     <string name="game_hints_on">Подсказки вкл.</string>
     <string name="game_hints_off">Подсказки выкл.</string>
 
+    <string name="game_settings_language">Язык</string>
+    <string name="game_language_system">Системный</string>
+    <string name="game_language_english">English</string>
+    <string name="game_language_russian">Русский</string>
+
     <string name="screen_scores_two_player_title">Два игрока</string>
     <string name="scores_label_crosses">Крестики (✕)</string>
     <string name="scores_label_noughts">Нолики (○)</string>
