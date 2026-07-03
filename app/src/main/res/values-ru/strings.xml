@@ -43,6 +43,7 @@
     <string name="game_ai_easy">Легко</string>
     <string name="game_ai_medium">Средне</string>
     <string name="game_ai_hard">Сложно</string>
+    <string name="game_ai_expert">Эксперт</string>
 
     <string name="game_settings_theme">Тема доски</string>
     <string name="game_theme_classic">Классика</string>

@@ -295,14 +295,20 @@ fun ModeAndAiSection(vm: GameViewModel, palette: BoardPalette) {
         )
 
         SectionCaption(stringResource(R.string.game_settings_ai_difficulty), palette)
+        val aiOn = vm.opponentMode == OpponentMode.HumanComputer
         Row(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             modifier = Modifier.fillMaxWidth(),
         ) {
-            val aiOn = vm.opponentMode == OpponentMode.HumanComputer
             AiChip(vm, AIDifficulty.Easy, stringResource(R.string.game_ai_easy), palette, aiOn, Modifier.weight(1f))
             AiChip(vm, AIDifficulty.Medium, stringResource(R.string.game_ai_medium), palette, aiOn, Modifier.weight(1f))
+        }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
             AiChip(vm, AIDifficulty.Hard, stringResource(R.string.game_ai_hard), palette, aiOn, Modifier.weight(1f))
+            AiChip(vm, AIDifficulty.Expert, stringResource(R.string.game_ai_expert), palette, aiOn, Modifier.weight(1f))
         }
 
         HudPill(

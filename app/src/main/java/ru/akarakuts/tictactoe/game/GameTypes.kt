@@ -33,6 +33,7 @@ enum class AIDifficulty {
     Easy,
     Medium,
     Hard,
+    Expert,
 }
 
 /** A single placed mark: grid coordinates plus the player who moved. */

@@ -43,6 +43,7 @@
     <string name="game_ai_easy">Easy</string>
     <string name="game_ai_medium">Medium</string>
     <string name="game_ai_hard">Hard</string>
+    <string name="game_ai_expert">Expert</string>
 
     <string name="game_settings_theme">Board theme</string>
     <string name="game_theme_classic">Classic</string>
