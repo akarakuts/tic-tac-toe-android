@@ -88,6 +88,18 @@
     <string name="game_language_english">English</string>
     <string name="game_language_russian">Русский</string>
 
+    <string name="game_settings_show_onboarding">Показать вступление</string>
+    <string name="onboarding_done">Начать игру</string>
+    <string name="onboarding_next">Далее</string>
+    <string name="onboarding_slide1_title">Добро пожаловать</string>
+    <string name="onboarding_slide1_body">Крестики-нолики с настраиваемым полем. Нажмите на ячейку, чтобы поставить свой знак, — соберите линию из своих символов, чтобы победить.</string>
+    <string name="onboarding_slide2_title">Поля и правила</string>
+    <string name="onboarding_slide2_body">Выбирайте поле от 3×3 до 6×6 и задайте, сколько знаков в ряд приносят победу. Большие поля — длиннее и глубже партии.</string>
+    <string name="onboarding_slide3_title">Темы</string>
+    <string name="onboarding_slide3_body">Играйте против компьютера, чтобы открывать темы поля: Аврора, Роща, Закат и Океан. Выбирайте их в Настройках.</string>
+    <string name="onboarding_slide4_title">Статистика и прочее</string>
+    <string name="onboarding_slide4_body">Следите за победами, сериями и счётом двух игроков. Отменяйте ходы, получайте подсказки и выбирайте язык в Настройках.</string>
+
     <string name="screen_scores_two_player_title">Два игрока</string>
     <string name="scores_label_crosses">Крестики (✕)</string>
     <string name="scores_label_noughts">Нолики (○)</string>

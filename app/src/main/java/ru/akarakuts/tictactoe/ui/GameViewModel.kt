@@ -248,6 +248,19 @@ class GameViewModel(
         LocaleController.apply(code)
     }
 
+    /** Marks the onboarding as completed so it no longer shows on launch. */
+    fun markOnboardingShown() {
+        if (progress.onboardingShown) return
+        progress = progress.copy(onboardingShown = true)
+        store.save(progress)
+    }
+
+    /** Surface onboarding again from Settings; reset the flag so the flow re-appears. */
+    fun showOnboardingAgain() {
+        progress = progress.copy(onboardingShown = false)
+        store.save(progress)
+    }
+
     private fun maybeRecordOutcome() {
         if (roundOutcomeRecorded) return
         when (val o = game.outcome()) {

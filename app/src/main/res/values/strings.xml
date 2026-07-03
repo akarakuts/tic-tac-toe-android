@@ -88,6 +88,18 @@
     <string name="game_language_english">English</string>
     <string name="game_language_russian">Русский</string>
 
+    <string name="game_settings_show_onboarding">Show intro again</string>
+    <string name="onboarding_done">Get started</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_slide1_title">Welcome</string>
+    <string name="onboarding_slide1_body">Tic-tac-toe with variable board size. Tap a cell to place your mark — get a line of your symbols to win.</string>
+    <string name="onboarding_slide2_title">Boards &amp; rules</string>
+    <string name="onboarding_slide2_body">Choose any board from 3×3 to 6×6 and set how many symbols in a row win. Bigger boards make for longer, deeper games.</string>
+    <string name="onboarding_slide3_title">Themes</string>
+    <string name="onboarding_slide3_body">Play vs Computer to unlock new board themes: Aurora, Grove, Ember and Ocean. Pick them in Settings.</string>
+    <string name="onboarding_slide4_title">Stats &amp; more</string>
+    <string name="onboarding_slide4_body">Track your wins, streaks, and two-player scores. Take back moves, get hints, and choose your language in Settings.</string>
+
     <string name="screen_scores_two_player_title">Two players</string>
     <string name="scores_label_crosses">Crosses (✕)</string>
     <string name="scores_label_noughts">Noughts (○)</string>

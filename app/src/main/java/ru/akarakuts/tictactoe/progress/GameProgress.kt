@@ -26,6 +26,8 @@ data class GameProgress(
     val humanDraws: Int = 0,
     /** In-app language code: "system" (default), or a BCP-47 tag like "en"/"ru". */
     val appLanguage: String = "system",
+    /** Whether the first-launch onboarding has been completed. */
+    val onboardingShown: Boolean = false,
 ) {
     fun applyVsAIOutcome(humanWon: Boolean?): GameProgress {
         var wins = winsVsAI

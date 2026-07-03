@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -140,6 +142,13 @@ fun SettingsScreen(vm: GameViewModel, palette: BoardPalette) {
                             )
                         }
                     }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    HudPrimaryButton(
+                        text = stringResource(R.string.game_settings_show_onboarding),
+                        palette = palette,
+                        onClick = { vm.showOnboardingAgain() },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 }
             }
 

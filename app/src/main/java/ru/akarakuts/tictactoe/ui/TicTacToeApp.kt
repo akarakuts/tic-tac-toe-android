@@ -58,6 +58,12 @@ fun TicTacToeApp(vm: GameViewModel) {
     val accent = MaterialTheme.colorScheme.primary
     val palette = boardPalette(vm.progress.selectedTheme, dark, accent)
 
+    // First-launch onboarding takes over until the user completes it.
+    if (!vm.progress.onboardingShown) {
+        OnboardingScreen(palette = palette, onDone = { vm.markOnboardingShown() })
+        return
+    }
+
     val panelBg = palette.panelFill.copy(alpha = (palette.panelFill.alpha * 1.08f).coerceIn(0f, 1f))
 
     Scaffold(
