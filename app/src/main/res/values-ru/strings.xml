@@ -128,4 +128,22 @@
     <string name="bt_status_discovering">Поиск хоста…</string>
     <string name="bt_status_connected">Подключено! Второй игрок присоединился.</string>
     <string name="bt_status_disconnected">Отключено. Попробуйте снова.</string>
+
+    <string name="screen_achievements_title">Достижения</string>
+    <string name="ach_locked">Закрыто</string>
+    <string name="ach_unlocked">Открыто</string>
+    <string name="ach_first_win_title">Первая победа</string>
+    <string name="ach_first_win_desc">Выиграйте первую партию у компьютера.</string>
+    <string name="ach_streaker_title">Серия</string>
+    <string name="ach_streaker_desc">Соберите серию из 3 побед подряд против компьютера.</string>
+    <string name="ach_sharpshooter_title">Снайпер</string>
+    <string name="ach_sharpshooter_desc">Выиграйте 5 партий у компьютера.</string>
+    <string name="ach_veteran_title">Ветеран</string>
+    <string name="ach_veteran_desc">Выиграйте 10 партий у компьютера.</string>
+    <string name="ach_conqueror_title">Покоритель</string>
+    <string name="ach_conqueror_desc">Обыграйте ИИ уровня «Эксперт».</string>
+    <string name="ach_collector_title">Коллекционер</string>
+    <string name="ach_collector_desc">Откройте все темы доски.</string>
+    <string name="ach_series_champion_title">Чемпион серии</string>
+    <string name="ach_series_champion_desc">Выиграйте серию до N побед.</string>
 </resources>

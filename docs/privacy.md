@@ -14,6 +14,7 @@ This app does **not** collect, transmit, or sell personal data. All game progres
 - Selected theme, sound on/off, and master volume
 - In-app language choice (System / English / Русский)
 - Onboarding-completed flag
+- Achievement progress (derived from the stats above — never shared)
 - In-progress game state (restored after process death when possible)
 
 Data is saved in app-private storage (Jetpack **DataStore Preferences**). It may be included in your device's **automatic backup** to your Google account if you have Android backup enabled.

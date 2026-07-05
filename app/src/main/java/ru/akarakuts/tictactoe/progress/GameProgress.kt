@@ -40,14 +40,19 @@ data class GameProgress(
     val seriesP2Wins: Int = 0,
     /** Draws in the current active series. */
     val seriesDraws: Int = 0,
+    /** Total number of best-of-N series this player has won (achievements). */
+    val seriesWon: Int = 0,
+    /** Whether the human has ever beaten the Expert AI (achievements). */
+    val beatExpert: Boolean = false,
 ) {
-    fun applyVsAIOutcome(humanWon: Boolean?): GameProgress {
+    fun applyVsAIOutcome(humanWon: Boolean?, difficulty: AIDifficulty = AIDifficulty.Medium): GameProgress {
         var wins = winsVsAI
         var losses = lossesVsAI
         var draws = drawsVsAI
         var streak = currentWinStreak
         var best = bestWinStreak
         var unlocked = unlockedThemes.toMutableSet()
+        var beat = beatExpert
         when (humanWon) {
             true -> {
                 wins++
@@ -57,6 +62,7 @@ data class GameProgress(
                 if (wins >= 5) unlocked += BoardVisualStyle.Grove
                 if (best >= 3) unlocked += BoardVisualStyle.Ember
                 if (wins >= 10) unlocked += BoardVisualStyle.Ocean
+                if (difficulty == AIDifficulty.Expert) beat = true
             }
             false -> {
                 losses++
@@ -77,6 +83,7 @@ data class GameProgress(
             bestWinStreak = best,
             unlockedThemes = unlocked,
             selectedTheme = theme,
+            beatExpert = beat,
         )
     }
 

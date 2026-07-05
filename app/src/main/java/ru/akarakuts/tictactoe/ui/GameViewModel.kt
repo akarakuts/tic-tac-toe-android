@@ -301,9 +301,10 @@ class GameViewModel(
                 roundOutcomeRecorded = true
                 val humanWon = (o as? GameOutcome.Win)?.player == humanPlayer
                 val beforeUnlocked = progress.unlockedThemes.size
+                val difficulty = progress.aiDifficulty
                 updateProgress { p ->
                     when (opponentMode) {
-                        OpponentMode.HumanComputer -> p.applyVsAIOutcome(humanWon = humanWon)
+                        OpponentMode.HumanComputer -> p.applyVsAIOutcome(humanWon = humanWon, difficulty = difficulty)
                         OpponentMode.HumanHuman ->
                             p.applyTwoPlayerOutcome(winner = (o as? GameOutcome.Win)?.player)
                     }
@@ -339,12 +340,17 @@ class GameViewModel(
             p2 >= target -> Player.O
             else -> null
         }
+        // A series counts as won for achievements when the human side (vs-AI) or either
+        // local side (two-player) takes it.
+        val humanTookSeries = decided != null &&
+            (opponentMode == OpponentMode.HumanHuman || decided == humanPlayer)
         updateProgress {
-            if (decided != null) {
+            val base = if (decided != null) {
                 it.copy(seriesP1Wins = 0, seriesP2Wins = 0, seriesDraws = 0)
             } else {
                 it.copy(seriesP1Wins = p1, seriesP2Wins = p2, seriesDraws = draws)
             }
+            if (humanTookSeries) base.copy(seriesWon = base.seriesWon + 1) else base
         }
         _state.update { it.copy(seriesWinner = decided) }
     }

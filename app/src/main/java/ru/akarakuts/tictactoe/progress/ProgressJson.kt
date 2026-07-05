@@ -8,9 +8,9 @@ import ru.akarakuts.tictactoe.game.Player
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** JSON codec for [GameProgress] with schema version and migrations (v1..v7). */
+/** JSON codec for [GameProgress] with schema version and migrations (v1..v8). */
 internal object ProgressJson {
-    const val SCHEMA_VERSION = 7
+    const val SCHEMA_VERSION = 8
 
     fun encode(p: GameProgress): String {
         val ja = JSONArray()
@@ -42,6 +42,8 @@ internal object ProgressJson {
             put("seriesP1Wins", p.seriesP1Wins)
             put("seriesP2Wins", p.seriesP2Wins)
             put("seriesDraws", p.seriesDraws)
+            put("seriesWon", p.seriesWon)
+            put("beatExpert", p.beatExpert)
         }.toString()
     }
 
@@ -96,6 +98,8 @@ internal object ProgressJson {
             seriesP1Wins = o.optInt("seriesP1Wins"),
             seriesP2Wins = o.optInt("seriesP2Wins"),
             seriesDraws = o.optInt("seriesDraws"),
+            seriesWon = o.optInt("seriesWon"),
+            beatExpert = o.optBoolean("beatExpert", false),
         )
     }
 }

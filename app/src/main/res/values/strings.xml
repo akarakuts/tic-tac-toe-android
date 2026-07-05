@@ -128,4 +128,22 @@
     <string name="bt_status_discovering">Searching for a host…</string>
     <string name="bt_status_connected">Connected! A peer has joined.</string>
     <string name="bt_status_disconnected">Disconnected. Try again.</string>
+
+    <string name="screen_achievements_title">Achievements</string>
+    <string name="ach_locked">Locked</string>
+    <string name="ach_unlocked">Unlocked</string>
+    <string name="ach_first_win_title">First Win</string>
+    <string name="ach_first_win_desc">Win your first game against the computer.</string>
+    <string name="ach_streaker_title">Streaker</string>
+    <string name="ach_streaker_desc">Reach a win streak of 3 against the computer.</string>
+    <string name="ach_sharpshooter_title">Sharpshooter</string>
+    <string name="ach_sharpshooter_desc">Win 5 games against the computer.</string>
+    <string name="ach_veteran_title">Veteran</string>
+    <string name="ach_veteran_desc">Win 10 games against the computer.</string>
+    <string name="ach_conqueror_title">Conqueror</string>
+    <string name="ach_conqueror_desc">Beat the Expert AI.</string>
+    <string name="ach_collector_title">Collector</string>
+    <string name="ach_collector_desc">Unlock every board theme.</string>
+    <string name="ach_series_champion_title">Series Champion</string>
+    <string name="ach_series_champion_desc">Win a best-of-N series.</string>
 </resources>

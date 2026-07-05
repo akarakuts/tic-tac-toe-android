@@ -13,8 +13,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
+import ru.akarakuts.tictactoe.progress.achievementsFor
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
@@ -372,6 +374,65 @@ fun SeriesSection(vm: GameViewModel, palette: BoardPalette) {
                     modifier = Modifier.weight(1f),
                     compact = true,
                 )
+            }
+        }
+    }
+}
+
+/** Achievement list: a card showing each achievement's glyph, title, description, and status. */
+@Composable
+fun AchievementsSection(vm: GameViewModel, palette: BoardPalette) {
+    val state by vm.state.collectAsStateWithLifecycle()
+    val achievements = remember(state.progress) { achievementsFor(state.progress) }
+    val unlockedCount = achievements.count { it.unlocked }
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(22.dp),
+        color = palette.panelFill,
+        border = BorderStroke(1.dp, palette.panelStroke),
+    ) {
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 18.dp)) {
+            Text(
+                text = stringResource(R.string.screen_achievements_title),
+                color = palette.statusText,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Text(
+                text = "$unlockedCount / ${achievements.size}",
+                color = palette.captionText,
+                fontSize = 12.sp,
+                modifier = Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 12.dp),
+            )
+            achievements.forEach { ach ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = ach.glyph,
+                        color = if (ach.unlocked) palette.crossMark else palette.captionText.copy(alpha = 0.4f),
+                        fontSize = 22.sp,
+                    )
+                    Column(modifier = Modifier.padding(start = 12.dp).fillMaxWidth()) {
+                        Text(
+                            text = stringResource(ach.titleRes),
+                            color = if (ach.unlocked) palette.statusText else palette.captionText,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(
+                            text = stringResource(ach.descriptionRes),
+                            color = palette.captionText,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(top = 1.dp),
+                        )
+                    }
+                }
             }
         }
     }

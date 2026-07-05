@@ -50,10 +50,12 @@ class ProgressJsonTest {
             seriesP1Wins = 2,
             seriesP2Wins = 1,
             seriesDraws = 0,
+            seriesWon = 4,
+            beatExpert = true,
         )
         val decoded = ProgressJson.decode(ProgressJson.encode(original))
         assertEquals(original, decoded)
-        assertEquals(7, ProgressJson.SCHEMA_VERSION)
+        assertEquals(8, ProgressJson.SCHEMA_VERSION)
     }
 
     @Test
@@ -76,5 +78,7 @@ class ProgressJsonTest {
         assertEquals(1f, decoded.soundVolume)
         assertEquals(false, decoded.seriesEnabled)
         assertEquals(2, decoded.seriesTarget)
+        assertEquals(0, decoded.seriesWon)
+        assertEquals(false, decoded.beatExpert)
     }
 }

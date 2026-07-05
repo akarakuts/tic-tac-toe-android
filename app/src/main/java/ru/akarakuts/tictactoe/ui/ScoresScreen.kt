@@ -185,6 +185,8 @@ fun ScoresScreen(vm: GameViewModel, palette: BoardPalette) {
                 }
             }
 
+            AchievementsSection(vm = vm, palette = palette)
+
             ThemeLegendCard(palette = palette, modifier = Modifier.padding(bottom = 24.dp))
         }
     }
