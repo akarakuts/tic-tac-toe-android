@@ -4,6 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import ru.akarakuts.tictactoe.game.AIDifficulty
 import ru.akarakuts.tictactoe.game.BoardVisualStyle
 import ru.akarakuts.tictactoe.game.OpponentMode
 import ru.akarakuts.tictactoe.game.Player
@@ -78,6 +79,25 @@ class GameProgressTest {
         assertEquals(0, next.p1Wins)
         assertEquals(0, next.p2Wins)
         assertEquals(1, next.humanDraws)
+    }
+
+    @Test
+    fun applyVsAIOutcome_winVsExpert_flagsBeatExpert() {
+        val next = GameProgress().applyVsAIOutcome(humanWon = true, difficulty = AIDifficulty.Expert)
+        assertTrue(next.beatExpert)
+    }
+
+    @Test
+    fun applyVsAIOutcome_winVsHard_doesNotFlagBeatExpert() {
+        val next = GameProgress().applyVsAIOutcome(humanWon = true, difficulty = AIDifficulty.Hard)
+        assertFalse(next.beatExpert)
+    }
+
+    @Test
+    fun defaults_beatExpertAndSeriesWon_areZero() {
+        val p = GameProgress()
+        assertFalse(p.beatExpert)
+        assertEquals(0, p.seriesWon)
     }
 
     @Test
