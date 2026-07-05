@@ -115,4 +115,17 @@
     <string name="scores_label_noughts">Нолики (○)</string>
     <string name="scores_label_draws_tp">Ничьи</string>
     <string name="scores_two_player_record">Крестики %1$d — %2$d Нолики · ничьи %3$d</string>
+
+    <string name="bt_lobby_title">Игра на двух устройствах</string>
+    <string name="bt_grant_permission">Разрешить доступ к Bluetooth</string>
+    <string name="bt_host">Создать игру</string>
+    <string name="bt_join">Присоединиться</string>
+    <string name="bt_cancel">Отмена</string>
+    <string name="bt_unavailable">Bluetooth недоступен на этом устройстве.</string>
+    <string name="bt_need_permission">Разрешите доступ к Bluetooth, чтобы играть на двух устройствах.</string>
+    <string name="bt_status_idle">Выберите «Создать» или «Присоединиться».</string>
+    <string name="bt_status_hosting">Ожидание… ждём второго игрока на другом устройстве.</string>
+    <string name="bt_status_discovering">Поиск хоста…</string>
+    <string name="bt_status_connected">Подключено! Второй игрок присоединился.</string>
+    <string name="bt_status_disconnected">Отключено. Попробуйте снова.</string>
 </resources>

@@ -115,4 +115,17 @@
     <string name="scores_label_noughts">Noughts (○)</string>
     <string name="scores_label_draws_tp">Draws</string>
     <string name="scores_two_player_record">Crosses %1$d — %2$d Noughts · draws %3$d</string>
+
+    <string name="bt_lobby_title">Two-device play</string>
+    <string name="bt_grant_permission">Grant Bluetooth permission</string>
+    <string name="bt_host">Host a game</string>
+    <string name="bt_join">Join a game</string>
+    <string name="bt_cancel">Cancel</string>
+    <string name="bt_unavailable">Bluetooth is not available on this device.</string>
+    <string name="bt_need_permission">Grant Bluetooth permission to play across two devices.</string>
+    <string name="bt_status_idle">Choose Host or Join to start.</string>
+    <string name="bt_status_hosting">Hosting… waiting for a peer on the other device.</string>
+    <string name="bt_status_discovering">Searching for a host…</string>
+    <string name="bt_status_connected">Connected! A peer has joined.</string>
+    <string name="bt_status_disconnected">Disconnected. Try again.</string>
 </resources>
