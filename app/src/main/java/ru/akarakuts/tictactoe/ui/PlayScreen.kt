@@ -19,6 +19,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -34,6 +35,11 @@ import ru.akarakuts.tictactoe.theme.BoardPalette
 fun PlayScreen(vm: GameViewModel, palette: BoardPalette) {
     val state by vm.state.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
+    val shareChooserTitle = stringResource(R.string.game_share_chooser)
+    val seriesFootnote = stringResource(R.string.game_share_footnote_series, state.progress.seriesP1Wins, state.progress.seriesP2Wins)
+    val finishedOutcome = state.game.outcome()
+    val isFinished = finishedOutcome !is ru.akarakuts.tictactoe.game.GameOutcome.InProgress
     val status = vm.statusText(
         s = state,
         turnCrosses = stringResource(R.string.game_turn_crosses),
@@ -147,6 +153,30 @@ fun PlayScreen(vm: GameViewModel, palette: BoardPalette) {
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         vm.hint()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .widthIn(max = 420.dp),
+                )
+            }
+            if (isFinished) {
+                Spacer(modifier = Modifier.height(10.dp))
+                HudPrimaryButton(
+                    text = stringResource(R.string.game_button_share),
+                    palette = palette,
+                    onClick = {
+                        val text = ru.akarakuts.tictactoe.game.buildResultShareText(
+                            board = state.game,
+                            summary = status,
+                            footnote = if (state.progress.seriesEnabled) seriesFootnote else null,
+                        )
+                        val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(android.content.Intent.EXTRA_TEXT, text)
+                        }
+                        context.startActivity(
+                            android.content.Intent.createChooser(shareIntent, shareChooserTitle)
+                        )
                     },
                     modifier = Modifier
                         .fillMaxWidth()

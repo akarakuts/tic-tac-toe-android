@@ -81,6 +81,9 @@
 
     <string name="game_button_undo">Отменить</string>
     <string name="game_button_hint">Подсказка</string>
+    <string name="game_button_share">Поделиться</string>
+    <string name="game_share_chooser">Поделиться результатом…</string>
+    <string name="game_share_footnote_series">Серия: ✕ %1$d — %2$d ○</string>
     <string name="game_settings_hints">Показывать подсказки хода</string>
     <string name="game_hints_on">Подсказки вкл.</string>
     <string name="game_hints_off">Подсказки выкл.</string>
