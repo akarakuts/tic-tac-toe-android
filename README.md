@@ -10,25 +10,35 @@ Android port of the **tic-tac-toe** game (n-in-a-row on a square grid), aligned 
 
 - **Board size** 3×3 … 6×6; **win line length** 3 … 6 (cannot exceed board edge).
 - **Two players** on one device or **vs computer** (minimax + α–β, difficulty caps, win/block tactics).
-- **AI difficulty** Easy / Medium / Hard — persisted like on macOS.
-- **Board themes** (Classic, Aurora, Grove, Ember) with palettes tuned for light/dark system theme + Material **dynamic / primary** accent.
-- **Unlocks** (vs AI only): Aurora — 1st win; Grove — 5 wins; Ember — best streak ≥ 3.
-- **Statistics** vs AI (wins / losses / draws, streak, best streak) — see **Scores** tab.
-- **Sound** — short synthesized tones (move / win / invalid); toggle persisted.
+- **AI difficulty** Easy / Medium / Hard / **Expert** (unbeatable on 3×3 via full minimax + transposition table; deep search within a time budget on larger boards) — persisted like on macOS.
+- **Board themes** (Classic, Aurora, Grove, Ember, **Ocean**) with palettes tuned for light/dark system theme + Material **dynamic / primary** accent.
+- **Unlocks** (vs AI only): Aurora — 1st win; Grove — 5 wins; Ember — best streak ≥ 3; **Ocean — 10 wins**.
+- **Statistics** vs AI (wins / losses / draws, streak, best streak) **and two-player** (crosses / noughts / draws) — see **Scores** tab.
+- **Series mode** (best-of-3 / 5 / 7 / 11) — a match runs until one side wins the target number of rounds.
+- **Undo** (takes back the AI reply with your move in vs-AI) and **hint** (briefly highlights the AI's recommended move; togglable in Settings).
+- **First-launch onboarding** — a short swipeable intro (rules, modes, theme unlocks, stats); replayable from Settings.
+- **In-app language** (System / English / Русский) via AppCompat per-app locales.
+- **Sound** — short synthesized tones (human move / AI move / win / loss / theme-unlock / invalid); master **volume slider** + toggle, persisted.
 - **Match settings** (board size, win line, opponent mode, side) — persisted between launches.
 - **UI** — **four tabs**: **Play**, **Settings**, **Scores**, **About** (version, support, [privacy policy](docs/privacy.md)). Bottom navigation; adaptive board via **`BoxWithConstraints`** (two-column layout on wide screens).
-- **Accessibility** — TalkBack labels for navigation and board cells.
+- **Accessibility** — TalkBack labels for navigation and board cells; ≥44dp touch targets on controls; vector marks + animated winning line + confetti on win.
+
+## Architecture
+
+- **State**: the UI renders a single `StateFlow<GameState>` (one immutable snapshot per recomposition); screens collect it via `collectAsStateWithLifecycle()`.
+- **Persistence**: Jetpack **DataStore Preferences** (JSON payload); migrates from the legacy SharedPreferences on first read. Schema is versioned with automatic migrations (currently **v7**).
+- **AI**: pure-Kotlin minimax + α–β with a Zobrist-keyed transposition table; Expert uses iterative deepening under a time budget.
 
 ## Android-specific notes
 
 | macOS | Android |
 |-------|---------|
 | SpriteKit scene | Compose UI |
-| `UserDefaults` + JSON | `SharedPreferences` + `JSONObject` |
-| `Localizable.xcstrings` | `res/values/strings.xml`, `res/values-ru/strings.xml` |
+| `UserDefaults` + JSON | **DataStore Preferences** + `JSONObject` (migrated from SharedPreferences) |
+| `Localizable.xcstrings` | `res/values/strings.xml`, `res/values-ru/strings.xml` (+ in-app language switch) |
 | Single window HUD | `NavHost` + `Scaffold` + bottom bar |
 
-Third-party libraries include **Navigation Compose**, **Lifecycle + ViewModel**, and **Coroutines** (see `app/build.gradle.kts`). Unit tests cover game rules, AI, and progress JSON.
+Third-party libraries include **Navigation Compose**, **Lifecycle + ViewModel**, **Coroutines**, **AppCompat** (per-app locales), and **DataStore** (see `app/build.gradle.kts`). Unit tests cover game rules, AI (incl. Expert parity), progress JSON, and `GameState` invariants.
 
 ## Requirements
 
@@ -120,27 +130,35 @@ Tagged pushes (`v*`) run the Release workflow: **APK + AAB** signed with your **
 
 ## Localization
 
-Add or edit `app/src/main/res/values/strings.xml` (default) and `values-ru/` (or other `values-xx` folders). The app picks strings from resources according to **system locale** (no in-app language switch).
+Add or edit `app/src/main/res/values/strings.xml` (default) and `values-ru/` (or other `values-xx` folders). The app honours the **system locale** by default, and users can override it in **Settings → Language** (System / English / Русский), applied via AppCompat per-app locales and persisted.
 
 ## Project layout
 
 | Path | Role |
 |------|------|
-| `app/src/main/java/.../game/` | `GameModel`, `TicTacToeAI`, enums — pure Kotlin rules & AI |
-| `app/src/main/java/.../progress/` | `GameProgress`, `GameProgressStore` — persistence |
-| `app/src/main/java/.../theme/BoardPalette.kt` | Theme palettes (ported from macOS colour intent) |
-| `app/src/main/java/.../audio/GameSoundFx.kt` | `AudioTrack` tone synthesis |
-| `app/src/main/java/.../ui/GameViewModel.kt` | Game + settings state, AI coroutine, sound hooks |
-| `app/src/main/java/.../ui/TicTacToeApp.kt` | Navigation, scaffold, top/bottom bars |
+| `app/src/main/java/.../game/` | `GameModel`, `TicTacToeAI` (minimax + transposition table + Expert), enums — pure Kotlin rules & AI |
+| `app/src/main/java/.../progress/` | `GameProgress`, `GameProgressStore` (DataStore + JSON, versioned schema) — persistence |
+| `app/src/main/java/.../theme/BoardPalette.kt` | Theme palettes (Classic/Aurora/Grove/Ember/Ocean, ported from macOS colour intent) |
+| `app/src/main/java/.../audio/GameSoundFx.kt` | `AudioTrack` tone synthesis (move/AI/win/loss/unlock) |
+| `app/src/main/java/.../ui/GameState.kt` | Immutable UI snapshot emitted by the ViewModel's `StateFlow` |
+| `app/src/main/java/.../ui/GameViewModel.kt` | `StateFlow<GameState>`, AI coroutine, sound hooks, settings mutators |
+| `app/src/main/java/.../ui/TicTacToeApp.kt` | Navigation, scaffold, top/bottom bars, onboarding gate |
+| `app/src/main/java/.../ui/OnboardingScreen.kt` | First-launch swipeable intro |
+| `app/src/main/java/.../ui/LocaleController.kt` | In-app language via AppCompat per-app locales |
 | `app/src/main/java/.../ui/PlayScreen.kt` | Game screen |
 | `app/src/main/java/.../ui/SettingsScreen.kt` | Settings screen |
-| `app/src/main/java/.../ui/ScoresScreen.kt` | Scores screen |
-| `app/src/main/java/.../ui/GameBoard.kt` | Board rendering |
-| `app/src/main/java/.../ui/HudComponents.kt` | Shared pills, buttons, grids |
+| `app/src/main/java/.../ui/ScoresScreen.kt` | Scores screen (vs-AI + two-player) |
+| `app/src/main/java/.../ui/GameBoard.kt` | Vector board rendering + animated win line |
+| `app/src/main/java/.../ui/ConfettiOverlay.kt` | Canvas confetti on win |
+| `app/src/main/java/.../ui/HudComponents.kt` | Shared pills, buttons, grids, series section |
 
 ## Testing
 
-Template unit/instrumentation tests live under `app/src/test` and `app/src/androidTest`. Extend them to cover `GameModel` / AI parity with the macOS test suite if you need regression safety.
+Unit tests live under `app/src/test` and cover game rules (`GameModel`), AI behaviour and Expert parity (never loses on 3×3, Expert-vs-Expert always draws), progress JSON round-trips and schema migrations, and `GameState` invariants. Instrumentation scaffolding is under `app/src/androidTest`. Run with:
+
+```bash
+./gradlew :app:testDebugUnitTest :app:lintDebug
+```
 
 ## License
 

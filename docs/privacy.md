@@ -1,6 +1,6 @@
 # Privacy Policy — Tic-tac-toe (Android)
 
-**Last updated:** June 2026  
+**Last updated:** July 2026  
 **Developer:** Aleksey Karakuts — [aleksey@karakuts.com](mailto:aleksey@karakuts.com)
 
 ## Summary
@@ -9,12 +9,14 @@ This app does **not** collect, transmit, or sell personal data. All game progres
 
 ## Data stored locally
 
-- Wins, losses, draws, and streaks against the computer
-- Board size, win line length, opponent mode, and AI difficulty
-- Selected theme and sound preference
+- Wins, losses, draws, and streaks against the computer; two-player (crosses/noughts/draws) tallies
+- Board size, win line length, opponent mode, AI difficulty, and best-of-N series settings
+- Selected theme, sound on/off, and master volume
+- In-app language choice (System / English / Русский)
+- Onboarding-completed flag
 - In-progress game state (restored after process death when possible)
 
-Data is saved in app-private storage (`SharedPreferences`). It may be included in your device's **automatic backup** to your Google account if you have Android backup enabled.
+Data is saved in app-private storage (Jetpack **DataStore Preferences**). It may be included in your device's **automatic backup** to your Google account if you have Android backup enabled.
 
 ## Data we do not collect
 
