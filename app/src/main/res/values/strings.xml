@@ -17,6 +17,7 @@
     <string name="scores_record_hint">Record (win-loss-draw): %1$d-%2$d-%3$d</string>
 
     <string name="game_button_new_game">New Game</string>
+    <string name="widget_stat_format">Wins: %1$d · Streak: %2$d</string>
     <string name="game_mode_two_players">Two Players</string>
     <string name="game_mode_vs_computer">vs Computer</string>
     <string name="game_side_crosses">You — ✕</string>

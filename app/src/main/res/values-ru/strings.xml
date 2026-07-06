@@ -17,6 +17,7 @@
     <string name="scores_record_hint">Счёт (поб-пор-нич): %1$d-%2$d-%3$d</string>
 
     <string name="game_button_new_game">Новая игра</string>
+    <string name="widget_stat_format">Победы: %1$d · Серия: %2$d</string>
     <string name="game_mode_two_players">Два игрока</string>
     <string name="game_mode_vs_computer">Против компьютера</string>
     <string name="game_side_crosses">Вы — ✕</string>

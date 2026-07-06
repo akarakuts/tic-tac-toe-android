@@ -321,6 +321,8 @@ class GameViewModel(
                 if (progress.seriesEnabled) {
                     applySeriesRound((o as? GameOutcome.Win)?.player)
                 }
+                // Refresh the home-screen widget so its stat line tracks finished rounds.
+                ru.akarakuts.tictactoe.widget.HomeWidgetProvider.broadcastUpdate(getApplication())
             }
         }
     }
