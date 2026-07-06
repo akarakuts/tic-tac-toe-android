@@ -15,19 +15,24 @@ Android port of the **tic-tac-toe** game (n-in-a-row on a square grid), aligned 
 - **Unlocks** (vs AI only): Aurora — 1st win; Grove — 5 wins; Ember — best streak ≥ 3; **Ocean — 10 wins**.
 - **Statistics** vs AI (wins / losses / draws, streak, best streak) **and two-player** (crosses / noughts / draws) — see **Scores** tab.
 - **Series mode** (best-of-3 / 5 / 7 / 11) — a match runs until one side wins the target number of rounds.
+- **Achievements** — 7 local achievements (first win, streak, 5/10 wins, beat Expert, all themes, series champion) tracked on the **Scores** tab; derived from your stats, no account needed.
+- **Two-device play (Bluetooth)** — host or join a match over classic Bluetooth RFCOMM (offline, no server); see the in-app lobby. *(Wire protocol is unit-tested; runtime handshake needs two paired devices.)*
+- **Share result** — send a finished round (ASCII board + outcome) to any app via the system share sheet.
+- **Home-screen widget** — app name, your vs-AI wins/streak, and a quick New Game button.
 - **Undo** (takes back the AI reply with your move in vs-AI) and **hint** (briefly highlights the AI's recommended move; togglable in Settings).
 - **First-launch onboarding** — a short swipeable intro (rules, modes, theme unlocks, stats); replayable from Settings.
 - **In-app language** (System / English / Русский) via AppCompat per-app locales.
 - **Sound** — short synthesized tones (human move / AI move / win / loss / theme-unlock / invalid); master **volume slider** + toggle, persisted.
 - **Match settings** (board size, win line, opponent mode, side) — persisted between launches.
-- **UI** — **four tabs**: **Play**, **Settings**, **Scores**, **About** (version, support, [privacy policy](docs/privacy.md)). Bottom navigation; adaptive board via **`BoxWithConstraints`** (two-column layout on wide screens).
+- **UI** — **four tabs**: **Play**, **Settings**, **Scores** (vs-AI stats, two-player tallies, achievements), **About** (version, support, [privacy policy](docs/privacy.md)). Bottom navigation; adaptive board via **`BoxWithConstraints`** (two-column layout on wide screens).
 - **Accessibility** — TalkBack labels for navigation and board cells; ≥44dp touch targets on controls; vector marks + animated winning line + confetti on win.
 
 ## Architecture
 
 - **State**: the UI renders a single `StateFlow<GameState>` (one immutable snapshot per recomposition); screens collect it via `collectAsStateWithLifecycle()`.
-- **Persistence**: Jetpack **DataStore Preferences** (JSON payload); migrates from the legacy SharedPreferences on first read. Schema is versioned with automatic migrations (currently **v7**).
+- **Persistence**: Jetpack **DataStore Preferences** (JSON payload); migrates from the legacy SharedPreferences on first read. Schema is versioned with automatic migrations (currently **v8**).
 - **AI**: pure-Kotlin minimax + α–β with a Zobrist-keyed transposition table; Expert uses iterative deepening under a time budget.
+- **Multiplayer**: a device-agnostic `Transport` interface + a JSON wire protocol (`MultiplayerMessage`); `BluetoothTransport` is the offline RFCOMM implementation.
 
 ## Android-specific notes
 
@@ -136,8 +141,10 @@ Add or edit `app/src/main/res/values/strings.xml` (default) and `values-ru/` (or
 
 | Path | Role |
 |------|------|
-| `app/src/main/java/.../game/` | `GameModel`, `TicTacToeAI` (minimax + transposition table + Expert), enums — pure Kotlin rules & AI |
-| `app/src/main/java/.../progress/` | `GameProgress`, `GameProgressStore` (DataStore + JSON, versioned schema) — persistence |
+| `app/src/main/java/.../game/` | `GameModel`, `TicTacToeAI` (minimax + transposition table + Expert), `ResultShareText`, enums — pure Kotlin rules & AI |
+| `app/src/main/java/.../progress/` | `GameProgress`, `GameProgressStore` (DataStore + JSON, versioned schema), `Achievements` — persistence & achievements |
+| `app/src/main/java/.../multiplayer/` | `MultiplayerMessage` (wire protocol), `Transport`, `BluetoothTransport`, permissions — two-device play |
+| `app/src/main/java/.../widget/HomeWidgetProvider.kt` | Home-screen widget (stat line + New Game) |
 | `app/src/main/java/.../theme/BoardPalette.kt` | Theme palettes (Classic/Aurora/Grove/Ember/Ocean, ported from macOS colour intent) |
 | `app/src/main/java/.../audio/GameSoundFx.kt` | `AudioTrack` tone synthesis (move/AI/win/loss/unlock) |
 | `app/src/main/java/.../ui/GameState.kt` | Immutable UI snapshot emitted by the ViewModel's `StateFlow` |
@@ -145,16 +152,17 @@ Add or edit `app/src/main/res/values/strings.xml` (default) and `values-ru/` (or
 | `app/src/main/java/.../ui/TicTacToeApp.kt` | Navigation, scaffold, top/bottom bars, onboarding gate |
 | `app/src/main/java/.../ui/OnboardingScreen.kt` | First-launch swipeable intro |
 | `app/src/main/java/.../ui/LocaleController.kt` | In-app language via AppCompat per-app locales |
-| `app/src/main/java/.../ui/PlayScreen.kt` | Game screen |
+| `app/src/main/java/.../ui/BluetoothLobby.kt` | Two-device lobby (host/join + status) |
+| `app/src/main/java/.../ui/PlayScreen.kt` | Game screen (status, board, undo/hint/share) |
 | `app/src/main/java/.../ui/SettingsScreen.kt` | Settings screen |
-| `app/src/main/java/.../ui/ScoresScreen.kt` | Scores screen (vs-AI + two-player) |
+| `app/src/main/java/.../ui/ScoresScreen.kt` | Scores screen (vs-AI + two-player + achievements) |
 | `app/src/main/java/.../ui/GameBoard.kt` | Vector board rendering + animated win line |
 | `app/src/main/java/.../ui/ConfettiOverlay.kt` | Canvas confetti on win |
-| `app/src/main/java/.../ui/HudComponents.kt` | Shared pills, buttons, grids, series section |
+| `app/src/main/java/.../ui/HudComponents.kt` | Shared pills, buttons, grids, series & achievements sections |
 
 ## Testing
 
-Unit tests live under `app/src/test` and cover game rules (`GameModel`), AI behaviour and Expert parity (never loses on 3×3, Expert-vs-Expert always draws), progress JSON round-trips and schema migrations, and `GameState` invariants. Instrumentation scaffolding is under `app/src/androidTest`. Run with:
+Unit tests live under `app/src/test` and cover game rules (`GameModel`), AI behaviour and Expert parity (never loses on 3×3, Expert-vs-Expert always draws), progress JSON round-trips and schema migrations, `GameState` invariants, the multiplayer wire protocol (framing, garbage rejection, move validation), achievements projection, and the share-text snippet. Instrumentation scaffolding is under `app/src/androidTest`. Run with:
 
 ```bash
 ./gradlew :app:testDebugUnitTest :app:lintDebug
