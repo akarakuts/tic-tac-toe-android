@@ -2,10 +2,12 @@
     <string name="app_name">Крестики-нолики</string>
 
     <string name="nav_play">Игра</string>
+    <string name="nav_multiplayer">Мультиплеер</string>
     <string name="nav_settings">Настройки</string>
     <string name="nav_scores">Очки</string>
     <string name="nav_about">О приложении</string>
     <string name="screen_play_title">Игра</string>
+    <string name="screen_multiplayer_title">Мультиплеер</string>
     <string name="screen_settings_title">Настройки</string>
     <string name="screen_settings_subtitle">Правила, соперник и оформление доски.</string>
     <string name="screen_scores_title">Очки</string>
@@ -126,12 +128,20 @@
     <string name="bt_join">Присоединиться</string>
     <string name="bt_cancel">Отмена</string>
     <string name="bt_unavailable">Bluetooth недоступен на этом устройстве.</string>
+    <string name="bt_disabled">Включите Bluetooth для игры на двух устройствах.</string>
     <string name="bt_need_permission">Разрешите доступ к Bluetooth, чтобы играть на двух устройствах.</string>
+    <string name="bt_lobby_content_desc">Лобби Bluetooth-мультиплеера</string>
     <string name="bt_status_idle">Выберите «Создать» или «Присоединиться».</string>
     <string name="bt_status_hosting">Ожидание… ждём второго игрока на другом устройстве.</string>
     <string name="bt_status_discovering">Поиск хоста…</string>
     <string name="bt_status_connected">Подключено! Второй игрок присоединился.</string>
     <string name="bt_status_disconnected">Отключено. Попробуйте снова.</string>
+
+    <string name="mp_leave_match">Выйти из партии</string>
+    <string name="mp_status_you_win">Вы победили!</string>
+    <string name="mp_status_peer_win">Победил соперник.</string>
+    <string name="mp_error_peer_disconnected">Соединение потеряно. Партия завершена.</string>
+    <string name="mp_error_invalid_config">Не удалось начать партию (некорректные настройки).</string>
 
     <string name="screen_achievements_title">Достижения</string>
     <string name="ach_locked">Закрыто</string>

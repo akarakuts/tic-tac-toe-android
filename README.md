@@ -16,7 +16,7 @@ Android port of the **tic-tac-toe** game (n-in-a-row on a square grid), aligned 
 - **Statistics** vs AI (wins / losses / draws, streak, best streak) **and two-player** (crosses / noughts / draws) — see **Scores** tab.
 - **Series mode** (best-of-3 / 5 / 7 / 11) — a match runs until one side wins the target number of rounds.
 - **Achievements** — 7 local achievements (first win, streak, 5/10 wins, beat Expert, all themes, series champion) tracked on the **Scores** tab; derived from your stats, no account needed.
-- **Two-device play (Bluetooth)** — host or join a match over classic Bluetooth RFCOMM (offline, no server); see the in-app lobby. *(Wire protocol is unit-tested; runtime handshake needs two paired devices.)*
+- **Two-device play (Bluetooth)** — host or join over classic Bluetooth RFCOMM; config/ack handshake, synced moves, disconnect handling. See [docs/MULTIPLAYER_PROTOCOL.md](docs/MULTIPLAYER_PROTOCOL.md).
 - **Share result** — send a finished round (ASCII board + outcome) to any app via the system share sheet.
 - **Home-screen widget** — app name, your vs-AI wins/streak, and a quick New Game button.
 - **Undo** (takes back the AI reply with your move in vs-AI) and **hint** (briefly highlights the AI's recommended move; togglable in Settings).
@@ -24,7 +24,7 @@ Android port of the **tic-tac-toe** game (n-in-a-row on a square grid), aligned 
 - **In-app language** (System / English / Русский) via AppCompat per-app locales.
 - **Sound** — short synthesized tones (human move / AI move / win / loss / theme-unlock / invalid); master **volume slider** + toggle, persisted.
 - **Match settings** (board size, win line, opponent mode, side) — persisted between launches.
-- **UI** — **four tabs**: **Play**, **Settings**, **Scores** (vs-AI stats, two-player tallies, achievements), **About** (version, support, [privacy policy](docs/privacy.md)). Bottom navigation; adaptive board via **`BoxWithConstraints`** (two-column layout on wide screens).
+- **UI** — **five tabs**: **Play**, **Multiplayer**, **Settings**, **Scores** (vs-AI stats, two-player tallies, achievements), **About** (version, support, [privacy policy](docs/privacy.md)). Bottom navigation; adaptive board via **`BoxWithConstraints`** (two-column layout on wide screens).
 - **Accessibility** — TalkBack labels for navigation and board cells; ≥44dp touch targets on controls; vector marks + animated winning line + confetti on win.
 
 ## Architecture
@@ -162,7 +162,7 @@ Add or edit `app/src/main/res/values/strings.xml` (default) and `values-ru/` (or
 
 ## Testing
 
-Unit tests live under `app/src/test` and cover game rules (`GameModel`), AI behaviour and Expert parity (never loses on 3×3, Expert-vs-Expert always draws), progress JSON round-trips and schema migrations, `GameState` invariants, the multiplayer wire protocol (framing, garbage rejection, move validation), achievements projection, and the share-text snippet. Instrumentation scaffolding is under `app/src/androidTest`. Run with:
+Unit tests live under `app/src/test` and cover game rules (`GameModel`), AI behaviour and Expert parity (never loses on 3×3, Expert-vs-Expert always draws), progress JSON round-trips and schema migrations, `GameState` invariants, the multiplayer wire protocol (framing, garbage rejection, move validation), `GameViewModel` / `MultiplayerViewModel` / `GameProgressStore`, achievements projection, and the share-text snippet. Compose smoke tests (onboarding) are under `app/src/androidTest`. Run with:
 
 ```bash
 ./gradlew :app:testDebugUnitTest :app:lintDebug

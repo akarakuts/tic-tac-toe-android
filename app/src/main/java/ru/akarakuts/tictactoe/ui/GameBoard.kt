@@ -89,7 +89,6 @@ fun GameBoard(
                             CellTile(
                                 row = row,
                                 col = col,
-                                n = n,
                                 cell = game.cell(row, col),
                                 palette = palette,
                                 isLastMove = lastMove != null && lastMove.row == row && lastMove.col == col,
@@ -146,7 +145,6 @@ fun GameBoard(
 private fun CellTile(
     row: Int,
     col: Int,
-    n: Int,
     cell: Cell,
     palette: BoardPalette,
     isLastMove: Boolean,

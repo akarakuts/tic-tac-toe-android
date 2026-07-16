@@ -4,15 +4,14 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import ru.akarakuts.tictactoe.audio.GameSoundFx
+import ru.akarakuts.tictactoe.audio.DefaultSoundPlayer
+import ru.akarakuts.tictactoe.audio.SoundPlayer
 import ru.akarakuts.tictactoe.game.AIDifficulty
 import ru.akarakuts.tictactoe.game.BoardVisualStyle
 import ru.akarakuts.tictactoe.game.Cell
@@ -27,7 +26,7 @@ import ru.akarakuts.tictactoe.progress.GameProgressStore
 
 /**
  * Bridges game rules ([GameModel]), persistence ([GameProgressStore]), AI ([TicTacToeAI]) on a worker thread,
- * and UI feedback ([GameSoundFx]). All observable state is funnelled through a single
+ * and UI feedback ([SoundPlayer]). All observable state is funnelled through a single
  * [StateFlow]<[GameState]>; the individual read-only properties below delegate to it so existing
  * screens keep reading `vm.progress`, `vm.game`, etc. unchanged while a single source of truth
  * powers recomposition.
@@ -37,9 +36,11 @@ import ru.akarakuts.tictactoe.progress.GameProgressStore
 class GameViewModel(
     application: Application,
     private val savedStateHandle: SavedStateHandle,
+    private val sound: SoundPlayer = DefaultSoundPlayer,
 ) : AndroidViewModel(application) {
 
     private val store = GameProgressStore(application.applicationContext)
+    private val aiCoordinator = AiCoordinator(viewModelScope, sound)
 
     // Seeded with defaults; init loads the persisted progress asynchronously and swaps it in.
     private val _state = MutableStateFlow(GameState.initial(GameProgress()))
@@ -59,17 +60,18 @@ class GameViewModel(
     val hintMove: Move? get() = _state.value.hintMove
     val seriesWinner: Player? get() = _state.value.seriesWinner
 
+    @Volatile
     private var roundOutcomeRecorded = false
+    @Volatile
     private var inputEpoch = 0
-    private var aiJob: Job? = null
 
     init {
         // DataStore reads are async; load the persisted progress off the main thread, then apply
         // it to the state and kick off any pending AI move.
         viewModelScope.launch {
             val loaded = store.load()
-            GameSoundFx.soundEffectsEnabled = loaded.soundEnabled
-            GameSoundFx.volume = loaded.soundVolume
+            sound.soundEffectsEnabled = loaded.soundEnabled
+            sound.volume = loaded.soundVolume
             LocaleController.restore(loaded.appLanguage)
             _state.update { it.copy(progress = loaded) }
             _state.update {
@@ -78,7 +80,7 @@ class GameViewModel(
                     winLength = loaded.winLength,
                     opponentMode = loaded.opponentMode,
                     humanPlayer = loaded.humanPlayer,
-                    game = restoreGameOrNew(),
+                    game = restoreGameOrNew(loaded.boardSize, loaded.winLength),
                 )
             }
             maybeKickAi()
@@ -88,8 +90,7 @@ class GameViewModel(
     private val aiPlayer: Player get() = humanPlayer.other
 
     fun bumpEpochAndCancelAi() {
-        aiJob?.cancel()
-        aiJob = null
+        aiCoordinator.cancel()
         inputEpoch += 1
         _state.update { it.copy(aiThinking = false) }
     }
@@ -149,9 +150,9 @@ class GameViewModel(
 
     fun toggleSound() {
         updateProgress { it.copy(soundEnabled = !it.soundEnabled) }
-        GameSoundFx.soundEffectsEnabled = progress.soundEnabled
-        GameSoundFx.volume = progress.soundVolume
-        if (progress.soundEnabled) GameSoundFx.playMoveTap()
+        sound.soundEffectsEnabled = progress.soundEnabled
+        sound.volume = progress.soundVolume
+        if (progress.soundEnabled) sound.playMoveTap()
     }
 
     /** Sets the SFX master volume in 0f..1f. */
@@ -159,7 +160,7 @@ class GameViewModel(
         val clamped = volume.coerceIn(0f, 1f)
         if (progress.soundVolume == clamped) return
         updateProgress { it.copy(soundVolume = clamped) }
-        GameSoundFx.volume = clamped
+        sound.volume = clamped
     }
 
     fun newGame() {
@@ -185,13 +186,13 @@ class GameViewModel(
         val before = game.outcome()
         val next = game.play(row, col)
         if (next == null) {
-            GameSoundFx.playInvalidMove()
+            sound.playInvalidMove()
             return
         }
         _state.update { it.copy(game = next, moveHistory = it.moveHistory + Move(row, col, mover), hintMove = null) }
         persistGameSnapshot()
         if (before == GameOutcome.InProgress && game.outcome() == GameOutcome.InProgress) {
-            GameSoundFx.playMoveTap()
+            sound.playMoveTap()
         }
         onBoardUpdatedAfterHumanMove()
     }
@@ -199,7 +200,7 @@ class GameViewModel(
     private fun onBoardUpdatedAfterHumanMove() {
         maybeRecordOutcome()
         if (game.outcome() is GameOutcome.Win) {
-            GameSoundFx.playWinFanfare()
+            sound.playWinFanfare()
         }
         maybeKickAi()
     }
@@ -299,7 +300,13 @@ class GameViewModel(
             GameOutcome.InProgress -> return
             is GameOutcome.Win, GameOutcome.Draw -> {
                 roundOutcomeRecorded = true
-                val humanWon = (o as? GameOutcome.Win)?.player == humanPlayer
+                // Distinguish a draw from a loss: null means "no winner" so applyVsAIOutcome
+                // routes to the draws branch instead of inflating losses.
+                val humanWon: Boolean? = when (o) {
+                    is GameOutcome.Win -> o.player == humanPlayer
+                    GameOutcome.Draw -> null
+                    else -> null
+                }
                 val beforeUnlocked = progress.unlockedThemes.size
                 val difficulty = progress.aiDifficulty
                 updateProgress { p ->
@@ -311,11 +318,11 @@ class GameViewModel(
                 }
                 // Cue: a theme was just unlocked by this round.
                 if (progress.unlockedThemes.size > beforeUnlocked) {
-                    GameSoundFx.playThemeUnlock()
+                    sound.playThemeUnlock()
                 }
-                // Cue: human lost to the computer (distinct from the win fanfare).
+                // Cue: human lost to the computer (distinct from the win fanfare and a draw).
                 if (isVsAi() && humanWon == false) {
-                    GameSoundFx.playLoss()
+                    sound.playLoss()
                 }
                 // Best-of-N series accounting.
                 if (progress.seriesEnabled) {
@@ -362,40 +369,29 @@ class GameViewModel(
         if (game.outcome() != GameOutcome.InProgress) return
         if (game.currentPlayer != aiPlayer) return
 
-        aiJob?.cancel()
         val epoch = inputEpoch
         val snapshot = game
         val ai = aiPlayer
         val difficulty = progress.aiDifficulty
 
-        aiJob = viewModelScope.launch {
-            _state.update { it.copy(aiThinking = true) }
-            try {
-                delay(220)
-                if (epoch != inputEpoch) return@launch
-                val move = withContext(kotlinx.coroutines.Dispatchers.Default) {
-                    TicTacToeAI.bestMove(ai, snapshot, difficulty)
-                }
-                if (epoch != inputEpoch) return@launch
-                if (!isVsAi()) return@launch
-                if (game.outcome() != GameOutcome.InProgress) return@launch
-                if (game.currentPlayer != ai) return@launch
-                val (r, c) = move ?: return@launch
-                val next = game.play(r, c) ?: return@launch
-                val wasInProgress = game.outcome() == GameOutcome.InProgress
-                _state.update { it.copy(game = next, moveHistory = it.moveHistory + Move(r, c, ai)) }
+        aiCoordinator.scheduleMove(
+            epoch = epoch,
+            currentEpoch = { inputEpoch },
+            snapshot = snapshot,
+            ai = ai,
+            difficulty = difficulty,
+            isStillAiTurn = {
+                isVsAi() &&
+                    game.outcome() == GameOutcome.InProgress &&
+                    game.currentPlayer == ai
+            },
+            onThinking = { thinking -> _state.update { it.copy(aiThinking = thinking) } },
+            onApplied = { next, move ->
+                _state.update { it.copy(game = next, moveHistory = it.moveHistory + move) }
                 persistGameSnapshot()
-                if (wasInProgress && game.outcome() == GameOutcome.InProgress) {
-                    GameSoundFx.playAiMove()
-                }
-                maybeRecordOutcome()
-                if (game.outcome() is GameOutcome.Win) {
-                    GameSoundFx.playWinFanfare()
-                }
-            } finally {
-                if (epoch == inputEpoch) _state.update { it.copy(aiThinking = false) }
-            }
-        }
+            },
+            onAfterMove = { maybeRecordOutcome() },
+        )
     }
 
     private fun syncProgressMatchSettings() {
@@ -429,65 +425,27 @@ class GameViewModel(
         savedStateHandle[KEY_CURRENT] = current
     }
 
-    private fun restoreGameOrNew(): GameModel {
+    private fun restoreGameOrNew(
+        boardSize: Int = this.boardSize,
+        winLength: Int = this.winLength,
+    ): GameModel {
         val cellsStr = savedStateHandle.get<String>(KEY_CELLS)
         val currentStr = savedStateHandle.get<String>(KEY_CURRENT)
-        return deserializeGame(cellsStr, currentStr, boardSize, winLength)
+        val side = when {
+            cellsStr == null -> boardSize
+            else -> {
+                val fromSnapshot = kotlin.math.sqrt(cellsStr.length.toDouble()).toInt()
+                if (fromSnapshot * fromSnapshot == cellsStr.length) fromSnapshot else boardSize
+            }
+        }
+        val winLen = minOf(winLength, side)
+        return deserializeGame(cellsStr, currentStr, side, winLen)
             ?: GameModel.new(boardSize, winLength)
     }
 
     /** Status line for HUD. Reads from [s] so callers can pass the collected snapshot. */
-    fun statusText(
-        s: GameState,
-        turnCrosses: String,
-        turnNoughts: String,
-        yourCrosses: String,
-        yourNoughts: String,
-        computerCrosses: String,
-        computerNoughts: String,
-        onlyCrosses: String,
-        onlyNoughts: String,
-        draw: String,
-        winCrosses: String,
-        winNoughts: String,
-        winYou: String,
-        winComputer: String,
-        aiThinking: String,
-    ): String {
-        val isVsAi = s.opponentMode == OpponentMode.HumanComputer
-        val humanPlayer = s.humanPlayer
-        val ai = humanPlayer.other
-        if (s.aiThinking && isVsAi && s.game.outcome() == GameOutcome.InProgress) {
-            return aiThinking
-        }
-        return when (val o = s.game.outcome()) {
-            GameOutcome.Draw -> draw
-            is GameOutcome.Win -> when (s.opponentMode) {
-                OpponentMode.HumanHuman ->
-                    if (o.player == Player.X) winCrosses else winNoughts
-
-                OpponentMode.HumanComputer ->
-                    if (o.player == humanPlayer) winYou else winComputer
-            }
-            GameOutcome.InProgress -> when (s.opponentMode) {
-                OpponentMode.HumanHuman ->
-                    if (s.game.currentPlayer == Player.X) turnCrosses else turnNoughts
-
-                OpponentMode.HumanComputer -> {
-                    when {
-                        s.game.currentPlayer == humanPlayer ->
-                            if (humanPlayer == Player.X) yourCrosses else yourNoughts
-
-                        s.game.currentPlayer == ai ->
-                            if (ai == Player.X) computerCrosses else computerNoughts
-
-                        else ->
-                            if (s.game.currentPlayer == Player.X) onlyCrosses else onlyNoughts
-                    }
-                }
-            }
-        }
-    }
+    fun statusText(s: GameState, labels: StatusTextLabels): String =
+        StatusTextResolver.resolve(s, labels)
 
     companion object {
         private const val KEY_CELLS = "game_cells"

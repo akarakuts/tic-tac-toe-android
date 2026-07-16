@@ -10,15 +10,19 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -27,9 +31,10 @@ import androidx.navigation.compose.rememberNavController
 import ru.akarakuts.tictactoe.R
 import ru.akarakuts.tictactoe.theme.boardPalette
 
-/** Bottom-nav routes for Play / Settings / Scores / About. */
+/** Bottom-nav routes for Play / Multiplayer / Settings / Scores / About. */
 object NavRoutes {
     const val PLAY = "play"
+    const val MULTIPLAYER = "multiplayer"
     const val SETTINGS = "settings"
     const val SCORES = "scores"
     const val ABOUT = "about"
@@ -52,9 +57,14 @@ private fun NavController.navigateTab(route: String) {
 @Composable
 fun TicTacToeApp(vm: GameViewModel) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val mpVm: MultiplayerViewModel = viewModel()
+    val mpState by mpVm.state.collectAsStateWithLifecycle()
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route ?: NavRoutes.PLAY
+    val snackbarHostState = remember { SnackbarHostState() }
+    val inMpMatch = currentRoute == NavRoutes.MULTIPLAYER &&
+        mpState.phase == MultiplayerPhase.Playing
 
     val dark = isSystemInDarkTheme()
     val accent = MaterialTheme.colorScheme.primary
@@ -71,6 +81,7 @@ fun TicTacToeApp(vm: GameViewModel) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = palette.sceneBackground,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -81,6 +92,7 @@ fun TicTacToeApp(vm: GameViewModel) {
                     Text(
                         text = when (currentRoute) {
                             NavRoutes.PLAY -> stringResource(R.string.screen_play_title)
+                            NavRoutes.MULTIPLAYER -> stringResource(R.string.screen_multiplayer_title)
                             NavRoutes.SETTINGS -> stringResource(R.string.screen_settings_title)
                             NavRoutes.SCORES -> stringResource(R.string.screen_scores_title)
                             NavRoutes.ABOUT -> stringResource(R.string.screen_about_title)
@@ -92,58 +104,72 @@ fun TicTacToeApp(vm: GameViewModel) {
             )
         },
         bottomBar = {
-            NavigationBar(
-                containerColor = panelBg,
-                contentColor = palette.statusText,
-            ) {
-                NavigationBarItem(
-                    selected = currentRoute == NavRoutes.PLAY,
-                    onClick = { navController.navigateTab(NavRoutes.PLAY) },
-                    icon = {
-                        Icon(
-                            painterResource(R.drawable.ic_nav_play),
-                            contentDescription = stringResource(R.string.nav_play),
-                        )
-                    },
-                    label = { Text(stringResource(R.string.nav_play)) },
-                    colors = navItemColors(palette, accent),
-                )
-                NavigationBarItem(
-                    selected = currentRoute == NavRoutes.SETTINGS,
-                    onClick = { navController.navigateTab(NavRoutes.SETTINGS) },
-                    icon = {
-                        Icon(
-                            painterResource(R.drawable.ic_nav_settings),
-                            contentDescription = stringResource(R.string.nav_settings),
-                        )
-                    },
-                    label = { Text(stringResource(R.string.nav_settings)) },
-                    colors = navItemColors(palette, accent),
-                )
-                NavigationBarItem(
-                    selected = currentRoute == NavRoutes.SCORES,
-                    onClick = { navController.navigateTab(NavRoutes.SCORES) },
-                    icon = {
-                        Icon(
-                            painterResource(R.drawable.ic_nav_scores),
-                            contentDescription = stringResource(R.string.nav_scores),
-                        )
-                    },
-                    label = { Text(stringResource(R.string.nav_scores)) },
-                    colors = navItemColors(palette, accent),
-                )
-                NavigationBarItem(
-                    selected = currentRoute == NavRoutes.ABOUT,
-                    onClick = { navController.navigateTab(NavRoutes.ABOUT) },
-                    icon = {
-                        Icon(
-                            painterResource(R.drawable.ic_nav_about),
-                            contentDescription = stringResource(R.string.nav_about),
-                        )
-                    },
-                    label = { Text(stringResource(R.string.nav_about)) },
-                    colors = navItemColors(palette, accent),
-                )
+            if (!inMpMatch) {
+                NavigationBar(
+                    containerColor = panelBg,
+                    contentColor = palette.statusText,
+                ) {
+                    NavigationBarItem(
+                        selected = currentRoute == NavRoutes.PLAY,
+                        onClick = { navController.navigateTab(NavRoutes.PLAY) },
+                        icon = {
+                            Icon(
+                                painterResource(R.drawable.ic_nav_play),
+                                contentDescription = stringResource(R.string.nav_play),
+                            )
+                        },
+                        label = { Text(stringResource(R.string.nav_play)) },
+                        colors = navItemColors(palette, accent),
+                    )
+                    NavigationBarItem(
+                        selected = currentRoute == NavRoutes.MULTIPLAYER,
+                        onClick = { navController.navigateTab(NavRoutes.MULTIPLAYER) },
+                        icon = {
+                            Icon(
+                                painterResource(R.drawable.ic_nav_multiplayer),
+                                contentDescription = stringResource(R.string.nav_multiplayer),
+                            )
+                        },
+                        label = { Text(stringResource(R.string.nav_multiplayer)) },
+                        colors = navItemColors(palette, accent),
+                    )
+                    NavigationBarItem(
+                        selected = currentRoute == NavRoutes.SETTINGS,
+                        onClick = { navController.navigateTab(NavRoutes.SETTINGS) },
+                        icon = {
+                            Icon(
+                                painterResource(R.drawable.ic_nav_settings),
+                                contentDescription = stringResource(R.string.nav_settings),
+                            )
+                        },
+                        label = { Text(stringResource(R.string.nav_settings)) },
+                        colors = navItemColors(palette, accent),
+                    )
+                    NavigationBarItem(
+                        selected = currentRoute == NavRoutes.SCORES,
+                        onClick = { navController.navigateTab(NavRoutes.SCORES) },
+                        icon = {
+                            Icon(
+                                painterResource(R.drawable.ic_nav_scores),
+                                contentDescription = stringResource(R.string.nav_scores),
+                            )
+                        },
+                        label = { Text(stringResource(R.string.nav_scores)) },
+                        colors = navItemColors(palette, accent),
+                    )
+                    NavigationBarItem(
+                        selected = currentRoute == NavRoutes.ABOUT,
+                        onClick = { navController.navigateTab(NavRoutes.ABOUT) },
+                        icon = {
+                            Icon(
+                                painterResource(R.drawable.ic_nav_about),
+                                contentDescription = stringResource(R.string.nav_about),
+                            )
+                        },
+                        label = { Text(stringResource(R.string.nav_about)) },
+                        colors = navItemColors(palette, accent),
+                    )
+                }
             }
         },
     ) { innerPadding ->
@@ -154,6 +180,24 @@ fun TicTacToeApp(vm: GameViewModel) {
         ) {
             composable(NavRoutes.PLAY) {
                 PlayScreen(vm = vm, palette = palette)
+            }
+            composable(NavRoutes.MULTIPLAYER) {
+                if (mpState.phase == MultiplayerPhase.Playing) {
+                    MultiplayerGameScreen(
+                        vm = mpVm,
+                        palette = palette,
+                        onLeave = { mpVm.leave() },
+                    )
+                } else {
+                    BluetoothLobby(
+                        mpVm = mpVm,
+                        gameVm = vm,
+                        palette = palette,
+                        snackbarHostState = snackbarHostState,
+                        onGameReady = { /* phase switch drives UI */ },
+                        onCancel = { navController.navigateTab(NavRoutes.PLAY) },
+                    )
+                }
             }
             composable(NavRoutes.SETTINGS) {
                 SettingsScreen(vm = vm, palette = palette)

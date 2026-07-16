@@ -24,6 +24,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -99,14 +100,20 @@ fun HudPrimaryButton(
     palette: BoardPalette,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    contentDescription: String? = null,
 ) {
     Surface(
         modifier = modifier
             .defaultMinSize(minHeight = 48.dp)
             .clip(RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick),
+            .semantics {
+                if (contentDescription != null) this.contentDescription = contentDescription
+                if (!enabled) disabled()
+            }
+            .clickable(enabled = enabled, onClick = onClick),
         shape = RoundedCornerShape(14.dp),
-        color = palette.newGameFill,
+        color = if (enabled) palette.newGameFill else palette.newGameFill.copy(alpha = palette.newGameFill.alpha * 0.45f),
         border = BorderStroke(2.dp, palette.newGameStroke),
     ) {
         Text(

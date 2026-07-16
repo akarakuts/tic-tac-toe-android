@@ -17,6 +17,9 @@ local.properties
 .idea/
 .cursor/
 
+# Code graph tooling (local analysis output)
+graphify-out/
+
 # OS ---
 .DS_Store
 Thumbs.db

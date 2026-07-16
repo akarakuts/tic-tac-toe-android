@@ -48,7 +48,10 @@ class GameProgressStore(private val context: Context) {
         if (raw == null) return null
         return try {
             ProgressJson.decode(raw)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            // Corrupted or schema-mismatched progress: fall back to defaults, but log so the data
+            // loss is visible (a silent reset would mask a real migration bug).
+            android.util.Log.w(TAG, "decode(): dropping unreadable progress, resetting to defaults", e)
             null
         }
     }
@@ -65,5 +68,9 @@ class GameProgressStore(private val context: Context) {
         // Best-effort clear of the migrated key; failure here is non-fatal.
         runCatching { legacy.edit { remove(LEGACY_KEY_PROGRESS) } }
         return decoded
+    }
+
+    private companion object {
+        const val TAG = "GameProgressStore"
     }
 }

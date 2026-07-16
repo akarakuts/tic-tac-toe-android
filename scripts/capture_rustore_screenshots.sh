@@ -14,7 +14,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJ_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 OUT="${PROJ_ROOT}/docs/store-screenshots"
 # Пиксели, отрезаемые сверху (status bar). Для 1280×2856 на эмуляторе Pixel 9 Pro совпадает с началом TopAppBar (y=156).
-STRIP_STATUS_TOP_PX="${STRIP_STATUS_TOP_PX:-156}"
+# Medium Phone / API 36 @420dpi ≈ 84; Pixel 9 Pro taller cutout ≈ 156.
+STRIP_STATUS_TOP_PX="${STRIP_STATUS_TOP_PX:-84}"
 # Целевой кадр для консоли RuStore (ширина×высота, соотношение 9:16).
 RUSTORE_W="${RUSTORE_W:-1080}"
 RUSTORE_H="${RUSTORE_H:-1920}"
@@ -89,69 +90,101 @@ rustore_portrait_9x16() {
 
 scroll_settings_abs_top() {
   local j
-  for j in $(seq 1 26); do
-    adb shell input swipe 640 2400 640 520 320
-    sleep 0.09
+  for j in $(seq 1 8); do
+    adb shell input swipe 540 1600 540 500 280
+    sleep 0.08
   done
-  sleep 0.35
+  sleep 0.25
 }
 
 scroll_settings_align_readable_top() {
   local j
-  for j in $(seq 1 10); do
+  for j in $(seq 1 6); do
     if dump_ui | grep -q 'text="Классика"'; then return 0; fi
-    adb shell input swipe 640 720 640 1680 300
-    sleep 0.22
+    adb shell input swipe 540 700 540 1400 280
+    sleep 0.18
   done
   return 0
 }
 
 scroll_settings_to_board_legend() {
-  adb shell input tap 640 1400
-  sleep 0.15
+  adb shell input tap 540 1200
+  sleep 0.12
   local j
-  for j in $(seq 1 24); do
-    adb shell input swipe 640 2350 640 520 350
-    sleep 0.1
+  for j in $(seq 1 10); do
+    adb shell input swipe 540 1700 540 500 300
+    sleep 0.08
   done
-  sleep 0.5
+  sleep 0.35
 }
+
+# Bottom nav centers for 5 tabs on 1080×2400 (Play / Multiplayer / Settings / Scores / About).
+NAV_Y="${NAV_Y:-2232}"
+NAV_PLAY_X="${NAV_PLAY_X:-100}"
+NAV_MP_X="${NAV_MP_X:-320}"
+NAV_SETTINGS_X="${NAV_SETTINGS_X:-540}"
+NAV_SCORES_X="${NAV_SCORES_X:-760}"
+NAV_ABOUT_X="${NAV_ABOUT_X:-980}"
+# Onboarding primary button (Далее / Начать игру) on 1080×2400.
+ONBOARD_BTN_X="${ONBOARD_BTN_X:-540}"
+ONBOARD_BTN_Y="${ONBOARD_BTN_Y:-2205}"
+
+# Drop stale numbered frames so renamed shots from older nav layouts do not leak into store_*.
+rm -f "$OUT"/0*.png "$RUSTORE_OUT"/*.png
 
 adb shell am force-stop ru.akarakuts.tictactoe >/dev/null 2>&1 || true
 sleep 0.35
-adb shell am start -n ru.akarakuts.tictactoe/.MainActivity >/dev/null
+adb shell monkey -p ru.akarakuts.tictactoe -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1 \
+  || adb shell am start -n ru.akarakuts.tictactoe/.MainActivity >/dev/null
+sleep 1.2
+
+# Complete first-launch onboarding if present (4 slides: fixed taps, no dump_ui).
+# Safe no-ops if onboarding already done.
+for _i in $(seq 1 4); do
+  adb shell input tap "$ONBOARD_BTN_X" "$ONBOARD_BTN_Y"
+  sleep 0.55
+done
 wait_game_ui || true
-sleep 1
+sleep 0.5
 
 cap "$OUT/01_ru_play_vs_ai.png"
 
-adb shell input tap 289 1245
-sleep 0.2
-adb shell input tap 639 1245
-sleep 0.2
-adb shell input tap 289 1595
+# Mid-game: three taps on a 3×3 board (1080×2400 cell centers).
+adb shell input tap "${BOARD_X1:-247}" "${BOARD_Y1:-839}"
+sleep 0.3
+adb shell input tap "${BOARD_X2:-540}" "${BOARD_Y1:-839}"
 sleep 0.45
+adb shell input tap "${BOARD_X1:-247}" "${BOARD_Y2:-1132}"
+sleep 0.7
 cap "$OUT/02_ru_play_midgame.png"
 
-adb shell input tap 639 2664
+adb shell input tap "$NAV_MP_X" "$NAV_Y"
+sleep 1.2
+cap "$OUT/03_ru_multiplayer_lobby.png"
+
+adb shell input tap "$NAV_SETTINGS_X" "$NAV_Y"
 sleep 1.1
 scroll_settings_abs_top
 scroll_settings_align_readable_top
 adb shell input swipe 640 920 640 1180 220
 sleep 0.35
-cap "$OUT/03_ru_settings_sound_themes_modes.png"
+cap "$OUT/04_ru_settings_sound_themes_modes.png"
 
 scroll_settings_to_board_legend
 sleep 0.45
-cap "$OUT/04_ru_settings_winlen_board_legend.png"
+cap "$OUT/05_ru_settings_winlen_board_legend.png"
 
-adb shell input tap 1074 2664
+adb shell input tap "$NAV_SCORES_X" "$NAV_Y"
 sleep 1
 adb shell input swipe 640 1500 640 900 320
 sleep 0.3
 adb shell input swipe 640 1500 640 900 320
 sleep 0.35
-cap "$OUT/05_ru_scores.png"
+cap "$OUT/06_ru_scores.png"
+
+adb shell input tap "$NAV_ABOUT_X" "$NAV_Y"
+sleep 1
+cap "$OUT/07_ru_about.png"
 
 for f in "$OUT"/0*.png; do
   [[ -f "$f" ]] || continue

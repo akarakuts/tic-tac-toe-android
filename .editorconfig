@@ -1,0 +1,30 @@
+# EditorConfig — https://editorconfig.org
+# Enforces a consistent code style across IDEs and the ktlint Gradle plugin.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+max_line_length = 140
+
+[*.{kt,kts}]
+# Follow the official Kotlin coding convention.
+ktlint_code_style = ktlint_official
+# Star imports are used heavily in Compose; keep ktlint from forcing single-name imports.
+ktlint_standard_no-wildcard-imports = disabled
+# Allow a trailing comma (idiomatic Kotlin) but don't *require* it everywhere.
+ktlint_standard_trailing-comma-on-call-site = disabled
+ktlint_standard_trailing-comma-on-declaration-site = disabled
+# Gradle KTS uses many chained multiline expressions (create("x") { ... }); the wrapping rule is
+# noisy there without adding clarity.
+ktlint_standard_multiline-expression-wrapping = disabled
+
+[*.{yml,yaml,toml}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false

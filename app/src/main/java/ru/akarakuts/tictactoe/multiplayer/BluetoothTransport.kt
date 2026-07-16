@@ -8,6 +8,7 @@ import android.bluetooth.BluetoothServerSocket
 import android.bluetooth.BluetoothSocket
 import android.content.Context
 import android.os.Build
+import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -63,8 +64,14 @@ class BluetoothTransport(
     private var ioJob: Job? = null
     private var socket: BluetoothSocket? = null
 
+    /** True when the device has a Bluetooth adapter. */
+    val hasAdapter: Boolean get() = adapter != null
+
+    /** True when Bluetooth is switched on. */
+    val isEnabled: Boolean get() = adapter?.isEnabled == true
+
     /** True when Bluetooth is available and switched on. */
-    val isAvailable: Boolean get() = adapter != null
+    val isAvailable: Boolean get() = hasAdapter && isEnabled
 
     /** Advertises an SDP service record and blocks (on a worker) until a peer connects. */
     @SuppressLint("MissingPermission")
@@ -78,7 +85,8 @@ class BluetoothTransport(
                 server = adapter.listenUsingRfcommWithServiceRecord(name, uuid)
                 val accepted = server.accept() ?: return@launch
                 onConnected(accepted)
-            } catch (_: IOException) {
+            } catch (e: IOException) {
+                Log.w(TAG, "host(): accepting a Bluetooth connection failed", e)
                 _state.value = TransportState.Disconnected
             } finally {
                 try { server?.close() } catch (_: IOException) {}
@@ -111,20 +119,21 @@ class BluetoothTransport(
 
     @SuppressLint("MissingPermission")
     private suspend fun collectDiscoveredDevices(adapter: BluetoothAdapter): List<BluetoothDevice> {
-        // Limit discovery time so the lobby stays responsive; the collector fills this list.
-        val found = mutableListOf<BluetoothDevice>()
+        // Thread-safe: devices arrive on the main thread via the receiver, this reads on IO.
+        val found = java.util.concurrent.CopyOnWriteArrayList<BluetoothDevice>()
         val collector = DeviceCollector(appContext) { found.add(it) }
-        collector.run(adapter, scope, scanDurationMs = 8_000L)
+        collector.run(adapter, scope, scanDurationMs = 4_000L)
         // Give the scan window time to populate before we walk the list.
-        kotlinx.coroutines.delay(8_200L)
-        return found
+        kotlinx.coroutines.delay(4_200L)
+        return found.toList()
     }
 
     @SuppressLint("MissingPermission")
     private suspend fun connectTo(device: BluetoothDevice): Boolean {
         val sock: BluetoothSocket = try {
             device.createRfcommSocketToServiceRecord(uuid)
-        } catch (_: IOException) {
+        } catch (e: IOException) {
+            Log.w(TAG, "connectTo(): creating RFCOMM socket failed for $device", e)
             return false
         }
         return try {
@@ -133,7 +142,8 @@ class BluetoothTransport(
             sock.connect()
             onConnected(sock)
             true
-        } catch (_: IOException) {
+        } catch (e: IOException) {
+            Log.w(TAG, "connectTo(): establishing connection to $device failed", e)
             try { sock.close() } catch (_: IOException) {}
             false
         }
@@ -153,8 +163,9 @@ class BluetoothTransport(
                 val line = reader.readLine() ?: break
                 if (line.isNotBlank()) _incoming.emit(line)
             }
-        } catch (_: IOException) {
-            // peer disconnect / stream closed
+        } catch (e: IOException) {
+            // Expected on peer disconnect / stream closed; log at debug so a genuine fault is still traceable.
+            Log.d(TAG, "readLoop(): peer stream closed", e)
         } finally {
             _state.value = TransportState.Disconnected
             close()
@@ -172,7 +183,8 @@ class BluetoothTransport(
                     out.write((frame + "\n").toByteArray(Charsets.UTF_8))
                     out.flush()
                 }
-            } catch (_: IOException) {
+            } catch (e: IOException) {
+                Log.w(TAG, "send(): writing frame failed, disconnecting", e)
                 _state.value = TransportState.Disconnected
             }
         }
@@ -193,6 +205,8 @@ class BluetoothTransport(
     }
 
     companion object {
+        private const val TAG = "BluetoothTransport"
+
         /** True on Android 12+ where the runtime BT permissions are split. */
         val needsFineGrainedPermissions: Boolean get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     }

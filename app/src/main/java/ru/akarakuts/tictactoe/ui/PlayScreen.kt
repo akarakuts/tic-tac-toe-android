@@ -40,23 +40,8 @@ fun PlayScreen(vm: GameViewModel, palette: BoardPalette) {
     val seriesFootnote = stringResource(R.string.game_share_footnote_series, state.progress.seriesP1Wins, state.progress.seriesP2Wins)
     val finishedOutcome = state.game.outcome()
     val isFinished = finishedOutcome !is ru.akarakuts.tictactoe.game.GameOutcome.InProgress
-    val status = vm.statusText(
-        s = state,
-        turnCrosses = stringResource(R.string.game_turn_crosses),
-        turnNoughts = stringResource(R.string.game_turn_noughts),
-        yourCrosses = stringResource(R.string.game_turn_your_crosses),
-        yourNoughts = stringResource(R.string.game_turn_your_noughts),
-        computerCrosses = stringResource(R.string.game_turn_computer_crosses),
-        computerNoughts = stringResource(R.string.game_turn_computer_noughts),
-        onlyCrosses = stringResource(R.string.game_turn_only_crosses),
-        onlyNoughts = stringResource(R.string.game_turn_only_noughts),
-        draw = stringResource(R.string.game_draw),
-        winCrosses = stringResource(R.string.game_win_crosses),
-        winNoughts = stringResource(R.string.game_win_noughts),
-        winYou = stringResource(R.string.game_win_you),
-        winComputer = stringResource(R.string.game_win_computer),
-        aiThinking = stringResource(R.string.game_ai_thinking),
-    )
+    val statusLabels = rememberStatusTextLabels()
+    val status = vm.statusText(state, statusLabels)
 
     BoxWithConstraints(
         modifier = Modifier

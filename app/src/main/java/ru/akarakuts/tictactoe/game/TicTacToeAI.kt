@@ -302,9 +302,9 @@ object TicTacToeAI {
         // Transposition lookup: a position seen at equal-or-greater remaining depth can be reused
         // only within the current alpha-beta window bounds (exact / lower / upper bound).
         val tt = table
-        val key = if (tt != null) tt.keyFor(state, ai, maximizingAI, plyRemaining) else null
+        val key = if (tt != null) tt.keyFor(state, ai, maximizingAI) else null
         if (key != null && tt != null) {
-            val cached = tt[key.first, alpha, beta]
+            val cached = tt[key, alpha, beta, plyRemaining]
             if (cached != null) return cached.value
         }
 
@@ -321,12 +321,12 @@ object TicTacToeAI {
                     minimax(next, ai, aiNext, a, beta, depth + 1, plyRemaining - 1, table),
                 )
                 if (value >= beta) {
-                    if (key != null && tt != null) tt.storeLowerBound(key.first, value)
+                    if (key != null && tt != null) tt.storeLowerBound(key, value, plyRemaining)
                     return value
                 }
                 a = maxOf(a, value)
             }
-            if (key != null && tt != null) tt.storeExact(key.first, value)
+            if (key != null && tt != null) tt.storeExact(key, value, plyRemaining)
             return value
         } else {
             var value = Int.MAX_VALUE
@@ -339,12 +339,12 @@ object TicTacToeAI {
                     minimax(next, ai, aiNext, alpha, b, depth + 1, plyRemaining - 1, table),
                 )
                 if (value <= alpha) {
-                    if (key != null && tt != null) tt.storeUpperBound(key.first, value)
+                    if (key != null && tt != null) tt.storeUpperBound(key, value, plyRemaining)
                     return value
                 }
                 b = minOf(b, value)
             }
-            if (key != null && tt != null) tt.storeExact(key.first, value)
+            if (key != null && tt != null) tt.storeExact(key, value, plyRemaining)
             return value
         }
     }
@@ -371,9 +371,14 @@ object TicTacToeAI {
 internal class TranspositionTable {
     private val table = HashMap<Long, Entry>()
 
+    /** [depth] = plyRemaining at store time; an entry is reusable only when it was searched at
+     *  least as deep as the current lookup, otherwise a shallow heuristic would masquerade as a
+     *  deep value and steer the search wrong. */
     data class Entry(val depth: Int, val value: Int, val flag: Int)
 
-    fun keyFor(state: GameModel, ai: Player, maximizingAI: Boolean, plyRemaining: Int): Pair<Long, Int> {
+    /** Position identity only — board layout + side to move + maximizing side. plyRemaining is a
+     *  search parameter, not part of the position, so it must not be folded into the hash. */
+    fun keyFor(state: GameModel, ai: Player, maximizingAI: Boolean): Long {
         var hash = zobristSeed(state, ai, maximizingAI)
         val n = state.boardSize
         for (row in 0 until n) {
@@ -384,11 +389,13 @@ internal class TranspositionTable {
                 }
             }
         }
-        return hash to plyRemaining
+        return hash
     }
 
-    operator fun get(hash: Long, alpha: Int, beta: Int): Entry? {
+    operator fun get(hash: Long, alpha: Int, beta: Int, plyRemaining: Int): Entry? {
         val e = table[hash] ?: return null
+        // Reject entries produced by a shallower search: their value is not valid at this depth.
+        if (e.depth < plyRemaining) return null
         return when (e.flag) {
             FLAG_EXACT -> e
             FLAG_LOWER -> if (e.value >= beta) e else null
@@ -397,16 +404,16 @@ internal class TranspositionTable {
         }
     }
 
-    fun storeExact(hash: Long, value: Int) {
-        table[hash] = Entry(depth = 0, value = value, flag = FLAG_EXACT)
+    fun storeExact(hash: Long, value: Int, plyRemaining: Int) {
+        table[hash] = Entry(depth = plyRemaining, value = value, flag = FLAG_EXACT)
     }
 
-    fun storeLowerBound(hash: Long, value: Int) {
-        table[hash] = Entry(depth = 0, value = value, flag = FLAG_LOWER)
+    fun storeLowerBound(hash: Long, value: Int, plyRemaining: Int) {
+        table[hash] = Entry(depth = plyRemaining, value = value, flag = FLAG_LOWER)
     }
 
-    fun storeUpperBound(hash: Long, value: Int) {
-        table[hash] = Entry(depth = 0, value = value, flag = FLAG_UPPER)
+    fun storeUpperBound(hash: Long, value: Int, plyRemaining: Int) {
+        table[hash] = Entry(depth = plyRemaining, value = value, flag = FLAG_UPPER)
     }
 
     private companion object {

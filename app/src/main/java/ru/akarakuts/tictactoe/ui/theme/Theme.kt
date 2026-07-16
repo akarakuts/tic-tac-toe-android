@@ -32,7 +32,8 @@ private val LightColorScheme = lightColorScheme(
     */
 )
 
-/** Material 3 shell: dynamic colour on API 31+, otherwise static purple schemes; board chrome uses [ru.akarakuts.tictactoe.theme.BoardPalette]. */
+/** Material 3 shell: dynamic colour on API 31+, otherwise static purple schemes;
+ *  board chrome uses [ru.akarakuts.tictactoe.theme.BoardPalette]. */
 @Composable
 fun TictactoeTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),

@@ -19,12 +19,16 @@ This app does **not** collect, transmit, or sell personal data. All game progres
 
 Data is saved in app-private storage (Jetpack **DataStore Preferences**). It may be included in your device's **automatic backup** to your Google account if you have Android backup enabled.
 
+## Bluetooth multiplayer
+
+When you use **Multiplayer** on two devices, the app uses **Bluetooth only** to connect peers and exchange game moves (JSON frames). No match data is sent to our servers. Bluetooth permissions (`BLUETOOTH_CONNECT`, `BLUETOOTH_SCAN` on Android 12+) are used solely to discover and connect to the other player; we do not use Bluetooth for location.
+
 ## Data we do not collect
 
 - No account registration
 - No analytics or advertising SDKs
 - No location, contacts, or microphone/camera access
-- No network calls during normal gameplay
+- No internet calls during normal gameplay (including Bluetooth matches)
 
 ## Third parties
 

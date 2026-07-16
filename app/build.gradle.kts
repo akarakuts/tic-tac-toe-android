@@ -3,6 +3,23 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ktlint)
+    alias(libs.plugins.detekt)
+}
+
+// AGP 9's compileSdk { version = release() {} } block is too new for the ktlint Gradle script
+// parser; lint only the Kotlin sources, not the build scripts.
+ktlint {
+    filter {
+        exclude("**/build.gradle.kts")
+        exclude("**/settings.gradle.kts")
+    }
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    allRules = false
+    config.from(files("$rootDir/detekt.yml"))
 }
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
@@ -20,8 +37,8 @@ android {
         applicationId = "ru.akarakuts.tictactoe"
         minSdk = 24
         targetSdk = 36
-        versionCode = 18
-        versionName = "1.6.0"
+        versionCode = 19
+        versionName = "1.7.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -44,6 +61,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            enableUnitTestCoverage = true
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
@@ -66,6 +86,16 @@ android {
         compose = true
         buildConfig = true
     }
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            all { it.reports.junitXml.required = true }
+        }
+    }
+}
+
+tasks.named("check") {
+    dependsOn("detekt")
 }
 
 dependencies {
@@ -85,6 +115,10 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockk)
+    testImplementation(libs.androidx.arch.core.testing)
+    testImplementation(libs.androidx.test.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)
