@@ -19,6 +19,7 @@ local.properties
 
 # Code graph tooling (local analysis output)
 graphify-out/
+.repowise/
 
 # OS ---
 .DS_Store
